@@ -23,7 +23,6 @@ const JobSeekerDashboard = () => {
   };
 
   const tabs = [
-    { id: 'search-jobs', label: 'Search Jobs' },
     { id: 'apply-jobs', label: 'Apply for Jobs' },
     { id: 'past-applications', label: 'Past Applications' },
     { id: 'recommendations', label: 'Recommendations' },
@@ -122,45 +121,37 @@ const JobSeekerDashboard = () => {
 
         {/* Main Content */}
         <section className="col-span-9 bg-white p-6 rounded shadow">
-          {activeTab === 'search-jobs' && (
-            <div>
-              <h2 className="text-xl font-bold mb-4">Search Jobs</h2>
-              <div className="flex flex-wrap gap-4">
-                <input
-                  type="text"
-                  placeholder="Search by title, skills, or company"
-                  className="border p-2 flex-1 rounded"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <select
-                  className="border p-2 rounded"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                >
-                  <option value="">All Locations</option>
-                  <option value="remote">Remote</option>
-                  <option value="onsite">On-site</option>
-                  <option value="hybrid">Hybrid</option>
-                </select>
-                <button
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  onClick={() => {
-                    setActiveTab('apply-jobs');
-                    setItemOffset(0);
-                  }}
-                >
-                  Search
-                </button>
-              </div>
-            </div>
-          )}
-
+          
           {activeTab === 'apply-jobs' && (
             <div>
               <h2 className="text-xl font-bold mb-4">Apply for Jobs</h2>
               {jobs.length > 0 ? (
                 <>
+                <div className="flex flex-wrap gap-4 mb-6">
+                    <input
+                      type="text"
+                      placeholder="Search by title, skills, or company"
+                      className="border p-2 flex-1 rounded"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <select
+                      className="border p-2 rounded"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                    >
+                      <option value="">All Locations</option>
+                      <option value="remote">Remote</option>
+                      <option value="onsite">On-site</option>
+                      <option value="hybrid">Hybrid</option>
+                    </select>
+                    <button
+                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                      onClick={() => setItemOffset(0)} // just refetch with new search
+                    >
+                      Search
+                    </button>
+                  </div>
                   <ul className="space-y-4">
                     {jobs.map((job) => (
                       <li key={job._id} className="border p-4 rounded shadow-sm">
