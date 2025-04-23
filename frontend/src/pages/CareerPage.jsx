@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from "react-router";
 import { Briefcase, Send, Users } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -59,9 +60,9 @@ const CareerPage = ()=> {
             </div>
             <p className="text-sm text-gray-600 mb-2">Location: {job.location}</p>
             <p className="text-sm text-gray-600">Type: {job.type}</p>
-            <button className="mt-4 w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition text-sm font-medium">
+            <Link to ='/login'><button className="mt-4 w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition text-sm font-medium">
               Apply Now
-            </button>
+            </button></Link>
           </motion.div>
         ))}
       </div>

@@ -24,6 +24,7 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     try {
       const res = await fetch('http://localhost:5002/signup', {
         method: 'POST',
@@ -43,8 +44,9 @@ const Signup = () => {
     } catch (err) {
       console.error(err);
       alert('An error occurred during signup');
-    }
-  };
+    }finally {
+      setLoading(false)
+  }};
 
   return (
     <>
