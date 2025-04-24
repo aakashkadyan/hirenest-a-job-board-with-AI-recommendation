@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import CitySelect from '../components/CitySelect';
 import JobTitleSelect from '../components/JobTitleSelect';
 import Pagination from '../components/Pagination';
+import UserProfile from '../components/UserProfile';
+
 
 const EmployerDashboard = () => {
   const userName = localStorage.getItem('userName');
@@ -167,6 +169,7 @@ const EmployerDashboard = () => {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow p-4 flex justify-between items-center">
         <h1 className="text-xl font-bold text-blue-600">Employer Dashboard</h1>
+        <UserProfile />
         <button
           onClick={handleLogout}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"

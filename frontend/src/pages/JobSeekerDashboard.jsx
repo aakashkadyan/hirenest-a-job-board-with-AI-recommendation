@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReadMore from '../components/ReadMore';
 import ReactPaginate from 'react-paginate';
+import UserProfile from '../components/UserProfile';
+
+
 
 const JobSeekerDashboard = () => {
   const userName = localStorage.getItem('userName');
@@ -72,18 +75,18 @@ const JobSeekerDashboard = () => {
       {/* Header */}
       <header className="bg-white shadow p-4 flex justify-between items-center">
         <h1 className="text-xl font-bold text-blue-600">Job Seeker Dashboard</h1>
+        <div className='flex items-end ml-50'><UserProfile /></div>
         <button
           onClick={handleLogout}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
-        >
-          Logout
+        > Logout 
         </button>
       </header>
 
       {/* Profile Summary */}
       <section className="bg-white shadow p-4 flex items-center gap-4 m-4 rounded">
         <img
-          src="/images/aakash.png"
+          src="/images/avatar.png"
           alt="Profile"
           className="w-16 h-16 rounded-full"
         />
@@ -93,7 +96,7 @@ const JobSeekerDashboard = () => {
             onClick={() => navigate('/profile')}
             className="text-blue-500 hover:underline text-sm"
           >
-            Edit Profile
+            Edit Profile 
           </button>
         </div>
       </section>
