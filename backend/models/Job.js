@@ -20,8 +20,8 @@ const salarySchema = new mongoose.Schema({
     required: true,
     default: 'INR',
     enum: ['INR', 'USD'],
-  },
-});
+  }, 
+}, { _id: false });
 
 const jobSchema = new mongoose.Schema(
   {

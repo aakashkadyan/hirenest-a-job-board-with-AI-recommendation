@@ -9,9 +9,10 @@ import EditJob from './components/EditJob'
 import JobSeekerDashboard from './pages/JobSeekerDashboard'
 import EmployerDashboard from './pages/EmployerDashboard'
 import ProtectedRoute from './authvalidation/ProtectedRoute'
-
-import { BrowserRouter as Router,Routes, Route } from "react-router";
+import JobSeekerForm from './pages/JobSeekerForm.jsx'
 import CareerPage from './pages/CareerPage'
+import { BrowserRouter as Router,Routes, Route } from "react-router";
+
 
 
 function App() {
@@ -33,6 +34,12 @@ function App() {
         <Route exact path ='/employerdashboard' element={
           <ProtectedRoute allowedRole="employer">
             <EmployerDashboard/>
+          </ProtectedRoute>
+          
+          }></Route>
+          <Route exact path ='/jobseekerform' element={
+          <ProtectedRoute allowedRole="jobseeker">
+            <JobSeekerForm/>
           </ProtectedRoute>
           
           }></Route>

@@ -52,8 +52,8 @@ const Contact = () => {
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-2xl font-semibold mb-4">Contact Info</h2>
             <p className="text-gray-700 mb-2">📍 123 Job Street, Tech City, India</p>
-            <p className="text-gray-700 mb-2">📞 +91 9876543210</p>
-            <p className="text-gray-700 mb-2">✉️ support@jobconnect.com</p>
+            <p className="text-gray-700 mb-2">📞 +91 9898989898</p>
+            <p className="text-gray-700 mb-2">✉️ support@hirenest.com</p>
             <p className="text-gray-600 mt-4">
               We usually respond within 24 hours. Feel free to ask any questions regarding jobs,
               hiring, or technical support.

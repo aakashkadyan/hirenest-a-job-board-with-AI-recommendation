@@ -13,6 +13,7 @@ const EmployerDashboard = () => {
   const [postedJobs, setPostedJobs] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const jobsPerPage = 5;
+  const [message, setMessage] = useState('');
 
   const [jobForm, setJobForm] = useState({
     title: '',
@@ -100,7 +101,10 @@ const EmployerDashboard = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert('Job posted successfully!');
+        setMessage('Job posted successfully!');
+        setTimeout(() => {
+          setMessage('');
+        }, 5000);
         setJobForm({
           title: '',
           description: '',
@@ -219,7 +223,14 @@ const EmployerDashboard = () => {
         <section className="col-span-9 bg-white p-6 rounded shadow">
           {activeTab === 'post-jobs' && (
             <div>
-              <h2 className="text-xl font-bold mb-4">Post a New Job</h2>
+              <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Post a New Job</h2>
+              {message && (
+                <div className="text-green-600 font-semibold ml-1">
+                  {message}
+                </div>
+              )}
+              </div>
               <form onSubmit={handleJobSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium">Job Title</label>
@@ -318,6 +329,7 @@ const EmployerDashboard = () => {
                 >
                   Post Job
                 </button>
+
               </form>
             </div>
           )}
@@ -353,6 +365,7 @@ const EmployerDashboard = () => {
                           >
                             Delete
                           </button>
+                          
                         </div>
                       </div>
                     ))}

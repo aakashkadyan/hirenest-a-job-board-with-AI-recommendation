@@ -50,7 +50,7 @@ const Footer = () => {
 
   {/* Footer Bottom */}
   <div className="text-center text-sm text-white/70 mt-10 border-t border-white/20 pt-4">
-    &copy; {new Date().getFullYear()} Job Board. All rights reserved.
+    &copy; {new Date().getFullYear()} HireNest. All rights reserved.
   </div>
 </footer>
 

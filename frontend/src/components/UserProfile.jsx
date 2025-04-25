@@ -2,13 +2,16 @@ import { useState } from 'react';
 import { ChevronDown, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+
+
 const  UserProfile = ()=> {
   const userName = localStorage.getItem('userName');  
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate('/login');
+    navigate('/');
   };
 
 
@@ -40,6 +43,7 @@ const  UserProfile = ()=> {
           <div className="px-4 py-2 text-sm text-gray-700 space-y-2">
             <p className="text-gray-500 text-xs mt-2">Personal</p>
             <DropdownItem label="Edit profile" />
+            <DropdownItem label="Resume" onClick ={() => navigate('/jobseekerform')}/>
             <DropdownItem label="Settings" />
             <DropdownItem label="Notifications" />
             <p className="text-gray-500 text-xs mt-4">Support</p>
@@ -56,9 +60,9 @@ const  UserProfile = ()=> {
   );
 }
 
-function DropdownItem({ label, icon }) {
+function DropdownItem({ label, icon, onClick }) {
   return (
-    <button className="w-full flex items-center gap-2 text-left px-2 py-1 hover:bg-gray-100 rounded-md">
+    <button onClick={onClick} className="w-full flex items-center gap-2 text-left px-2 py-1 hover:bg-gray-100 rounded-md">
       {icon && icon}
       {label}
     </button>

@@ -21,14 +21,14 @@ const jobSeekerSchema = new mongoose.Schema({
     startDate: Date,
     endDate: Date,
     description: String
-  }],
+  },{ _id: false }],
   education: [{
     institution: String,
     degree: String,
     fieldOfStudy: String,
     startYear: Number,
     endYear: Number
-  }],
+  },{ _id: false }],
   resume: {
     type: String, // Store file path or cloud URL for resume
     required: true
