@@ -76,11 +76,11 @@ const JobSeekerDashboard = () => {
       <header className="bg-white shadow p-4 flex justify-between items-center">
         <h1 className="text-xl font-bold text-blue-600">Job Seeker Dashboard</h1>
         <div className='flex items-end ml-50'><UserProfile /></div>
-        <button
+        {/* <button
           onClick={handleLogout}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
         > Logout 
-        </button>
+        </button> */}
       </header>
 
       {/* Profile Summary */}

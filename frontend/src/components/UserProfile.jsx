@@ -8,10 +8,11 @@ const  UserProfile = ()=> {
   const userName = localStorage.getItem('userName');  
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const userRole = localStorage.getItem('userRole');
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate('/');
+    navigate('/login');
   };
 
 
@@ -43,7 +44,10 @@ const  UserProfile = ()=> {
           <div className="px-4 py-2 text-sm text-gray-700 space-y-2">
             <p className="text-gray-500 text-xs mt-2">Personal</p>
             <DropdownItem label="Edit profile" />
-            <DropdownItem label="Resume" onClick ={() => navigate('/jobseekerform')}/>
+            {userRole !== 'employer' && (
+              <DropdownItem label="Resume" onClick={() => navigate('/jobseekerform')} />
+            )}
+            
             <DropdownItem label="Settings" />
             <DropdownItem label="Notifications" />
             <p className="text-gray-500 text-xs mt-4">Support</p>

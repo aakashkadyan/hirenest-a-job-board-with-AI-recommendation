@@ -174,17 +174,17 @@ const EmployerDashboard = () => {
       <header className="bg-white shadow p-4 flex justify-between items-center">
         <h1 className="text-xl font-bold text-blue-600">Employer Dashboard</h1>
         <UserProfile />
-        <button
+        {/* <button
           onClick={handleLogout}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
         >
           Logout
-        </button>
+        </button> */}
       </header>
 
       <section className="bg-white shadow p-4 flex items-center gap-4 m-4 rounded">
         <img
-          src="/images/employer-avatar.png"
+          src="/images/avatar.png"
           alt="Profile"
           className="w-16 h-16 rounded-full"
         />
