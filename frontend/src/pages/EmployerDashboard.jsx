@@ -345,31 +345,36 @@ const EmployerDashboard = () => {
                   <p className="text-sm text-gray-500 mb-2">
                     Showing {indexOfFirstJob + 1}–{Math.min(indexOfLastJob, postedJobs.length)} of {postedJobs.length} jobs
                   </p>
-
-                  <div className="space-y-4">
-                    {currentJobs.map((job) => (
-                      <div key={job._id} className="bg-white p-4 rounded shadow">
-                        <h3 className="text-lg font-semibold">{job.title}</h3>
-                        <p className="text-sm">{job.location}</p>
-                        <p className="text-gray-600">{job.description}</p>
-                        <div className="mt-2 flex justify-between items-center">
-                          <button
-                            onClick={() => navigate(`/job/edit/${job._id}`)}
-                            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 text-sm"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleJobDelete(job._id)}
-                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 text-sm"
-                          >
-                            Delete
-                          </button>
-                          
-                        </div>
+                  <div className="space-y-6">
+                  {currentJobs.map((job) => (
+                    <div
+                      key={job._id}
+                      className="bg-white p-6 rounded-lg border-2 border-blue-400 shadow-md hover:shadow-lg transition-shadow"
+                    >
+                      <div className="mb-4">
+                        <h3 className="text-xl font-bold text-blue-700">{job.title}</h3>
+                        <p className="text-sm text-gray-500 mt-1">{job.location}</p>
                       </div>
-                    ))}
-                  </div>
+                      <p className="text-gray-700 mb-4 line-clamp-3">{job.description}</p>
+                      
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => navigate(`/job/edit/${job._id}`)}
+                          className="bg-blue-500 text-white px-5 py-2 rounded-md hover:bg-blue-600 text-sm font-semibold"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleJobDelete(job._id)}
+                          className="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 text-sm font-semibold"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
 
                   <Pagination
                     pageCount={Math.ceil(postedJobs.length / jobsPerPage)}

@@ -10,6 +10,7 @@ import JobSeekerDashboard from './pages/JobSeekerDashboard'
 import EmployerDashboard from './pages/EmployerDashboard'
 import ProtectedRoute from './authvalidation/ProtectedRoute'
 import JobSeekerForm from './pages/JobSeekerForm.jsx'
+import EmployerProfileForm from './pages/EmployerProfileForm.jsx'
 import CareerPage from './pages/CareerPage'
 import { BrowserRouter as Router,Routes, Route } from "react-router";
 
@@ -41,7 +42,11 @@ function App() {
           <ProtectedRoute allowedRole="jobseeker">
             <JobSeekerForm/>
           </ProtectedRoute>
-          
+          }></Route>
+          <Route exact path ='/employerprofileform' element={
+          <ProtectedRoute allowedRole="employer">
+            <EmployerProfileForm/>
+          </ProtectedRoute>
           }></Route>
           <Route exact path ='/job/edit/:jobId' element={
           <ProtectedRoute allowedRole="employer">
