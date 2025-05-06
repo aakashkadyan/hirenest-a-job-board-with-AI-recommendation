@@ -21,14 +21,14 @@ const jobSeekerSchema = new mongoose.Schema({
     startDate: Date,
     endDate: Date,
     description: String
-  },{ _id: false }],
+  }, { _id: false }],
   education: [{
     institution: String,
     degree: String,
     fieldOfStudy: String,
     startYear: Number,
     endYear: Number
-  },{ _id: false }],
+  }, { _id: false }],
   resume: {
     type: String, // Store file path or cloud URL for resume
     required: true
@@ -40,15 +40,7 @@ const jobSeekerSchema = new mongoose.Schema({
       default: 'full-time'
     },
     preferredLocation: String
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
   }
-});
+}, { timestamps: true }); // This will automatically add createdAt and updatedAt
 
 module.exports = mongoose.model('JobSeeker', jobSeekerSchema);

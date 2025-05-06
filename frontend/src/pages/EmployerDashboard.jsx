@@ -165,24 +165,20 @@ const EmployerDashboard = () => {
     { id: 'post-jobs', label: 'Post Jobs' },
     { id: 'posted-jobs', label: 'Posted Jobs' },
     { id: 'applications', label: 'Applications' },
-    { id: 'candidates', label: 'Candidates' },
-    { id: 'settings', label: 'Settings' },
   ];
 
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-blue-600">Employer Dashboard</h1>
-        <UserProfile />
-        {/* <button
-          onClick={handleLogout}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
-        >
-          Logout
-        </button> */}
-      </header>
+            <img
+          src="/images/hirenest-logo.png" // Path to your logo image
+          alt="HireNest Logo"
+          className="h-auto max-h-14 w-auto object-contain" // Adjust the height as needed
+        />
+              <div className="flex items-end ml-50"><UserProfile /></div>
+            </header>
 
-      <section className="bg-white shadow p-4 flex items-center gap-4 m-4 rounded">
+      {/* <section className="bg-white shadow p-4 flex items-center gap-4 m-4 rounded">
         <img
           src="/images/avatar.png"
           alt="Profile"
@@ -199,7 +195,7 @@ const EmployerDashboard = () => {
             Edit Company Profile
           </button>
         </div>
-      </section>
+      </section> */}
 
       <main className="grid grid-cols-12 gap-4 m-4">
         <aside className="col-span-3 bg-white p-4 rounded shadow h-fit">
@@ -221,118 +217,121 @@ const EmployerDashboard = () => {
         </aside>
 
         <section className="col-span-9 bg-white p-6 rounded shadow">
-          {activeTab === 'post-jobs' && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Post a New Job</h2>
+                {activeTab === 'post-jobs' && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-blue-600">Post a New Job</h2>
               {message && (
                 <div className="text-green-600 font-semibold ml-1">
                   {message}
                 </div>
               )}
+            </div>
+            <form onSubmit={handleJobSubmit} className="space-y-4 p-4 border border-blue-400 bg-blue-50 rounded-lg">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Job Title</label>
+                <JobTitleSelect
+                  onChange={handleJobTitleChange}
+                  defaultValue={jobForm.title}
+                  className="w-full p-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+                />
               </div>
-              <form onSubmit={handleJobSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium">Job Title</label>
-                  <JobTitleSelect
-                    onChange={handleJobTitleChange}
-                    defaultValue={jobForm.title}
-                  />
-                </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Job Description</label>
+                <textarea
+                  name="description"
+                  value={jobForm.description}
+                  onChange={handleFormChange}
+                  required
+                  className="w-full p-3 border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  placeholder="Describe the job role and responsibilities"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Requirements</label>
+                <textarea
+                  name="requirements"
+                  value={jobForm.requirements}
+                  onChange={handleFormChange}
+                  className="w-full p-3 border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  placeholder="List key skills or qualifications"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium">Job Description</label>
-                  <textarea
-                    name="description"
-                    value={jobForm.description}
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Min Salary (INR)</label>
+                  <input
+                    type="number"
+                    name="min"
+                    value={jobForm.salaryRange.min}
                     onChange={handleFormChange}
-                    required
-                    className="w-full p-2 border rounded h-24"
+                    className="w-full p-2 border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium">Requirements</label>
-                  <textarea
-                    name="requirements"
-                    value={jobForm.requirements}
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Max Salary (INR)</label>
+                  <input
+                    type="number"
+                    name="max"
+                    value={jobForm.salaryRange.max}
                     onChange={handleFormChange}
-                    className="w-full p-2 border rounded h-20"
+                    className="w-full p-2 border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
                   />
                 </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium">Min Salary (INR)</label>
-                    <input
-                      type="number"
-                      name="min"
-                      value={jobForm.salaryRange.min}
-                      onChange={handleFormChange}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">Max Salary (INR)</label>
-                    <input
-                      type="number"
-                      name="max"
-                      value={jobForm.salaryRange.max}
-                      onChange={handleFormChange}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">Currency</label>
-                    <select
-                      name="currency"
-                      value={jobForm.salaryRange.currency}
-                      onChange={handleFormChange}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="INR">INR</option>
-                      <option value="USD">USD</option>
-                    </select>
-                  </div>
-                </div>
-
                 <div>
-                  <label className="block text-sm font-medium mb-1">Location</label>
-                  <CitySelect
-                    onChange={handleCityChange}
-                    defaultValue={
-                      jobForm.location
-                        ? { label: jobForm.location, value: jobForm.location }
-                        : null
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium">Job Type</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Currency</label>
                   <select
-                    name="type"
-                    value={jobForm.type}
+                    name="currency"
+                    value={jobForm.salaryRange.currency}
                     onChange={handleFormChange}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
                   >
-                    <option value="full-time">Full-Time</option>
-                    <option value="part-time">Part-Time</option>
-                    <option value="contract">Contract</option>
-                    <option value="internship">Internship</option>
+                    <option value="INR">INR</option>
+                    <option value="USD">USD</option>
                   </select>
                 </div>
+              </div>
 
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Location</label>
+                <CitySelect
+                  onChange={handleCityChange}
+                  defaultValue={
+                    jobForm.location
+                      ? { label: jobForm.location, value: jobForm.location }
+                      : null
+                  }
+                  className="w-full p-2 border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Job Type</label>
+                <select
+                  name="type"
+                  value={jobForm.type}
+                  onChange={handleFormChange}
+                  className="w-full p-2 border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
                 >
-                  Post Job
-                </button>
+                  <option value="full-time">Full-Time</option>
+                  <option value="part-time">Part-Time</option>
+                  <option value="contract">Contract</option>
+                  <option value="internship">Internship</option>
+                </select>
+              </div>
 
-              </form>
-            </div>
-          )}
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                Post Job
+              </button>
+            </form>
+          </div>
+        )}
 
           {activeTab === 'posted-jobs' && (
             <div>

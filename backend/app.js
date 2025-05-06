@@ -9,6 +9,7 @@ const { loginRouter, verifyToken } = require("./routes/login");
 const signUpRouter = require("./routes/signup");
 const jobRoute = require("./routes/jobRoute");
 const applicationRoute = require("./routes/applicationRoute");
+const employerprofileRoute = require("./routes/employerprofileRoute");
 const recommendationRoute = require("./routes/recommendationRoute");
 const JobSeekerRoute = require("./routes/jobSeekerRoute")
 dotenv.config();
@@ -70,6 +71,7 @@ const startServer = async () => {
 
     app.use('/api/jobs', jobRoute);
     app.use('/api/applications', applicationRoute);
+    app.use('/api/employerprofile', employerprofileRoute);
     app.use('/api/recommendation', recommendationRoute);
     app.use('/api/jobseekers', JobSeekerRoute);
 

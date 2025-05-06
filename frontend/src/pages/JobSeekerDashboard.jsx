@@ -107,7 +107,7 @@ const JobSeekerDashboard = () => {
       <header className="bg-white shadow p-4 flex justify-between items-center">
       <img
     src="/images/hirenest-logo.png" // Path to your logo image
-    alt="Job Seeker Dashboard Logo"
+    alt="HireNest Logo"
     className="h-auto max-h-14 w-auto object-contain" // Adjust the height as needed
   />
         <div className="flex items-end ml-50"><UserProfile /></div>
