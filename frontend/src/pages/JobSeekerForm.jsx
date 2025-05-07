@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import GoBackButton from '../components/GoBackButton';
 
 const JobSeekerForm = () => {

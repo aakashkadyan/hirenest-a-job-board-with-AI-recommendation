@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import ReadMore from '../components/ReadMore';
 import ReactPaginate from 'react-paginate';
@@ -30,10 +31,10 @@ const JobSeekerDashboard = () => {
   };
 
   const tabs = [
-    { id: 'apply-jobs', label: 'Apply for Jobs' },
-    { id: 'past-applications', label: 'Past Applications' },
-    { id: 'recommendations', label: 'Recommendations' },
-    { id: 'saved-jobs', label: 'Saved Jobs' },
+    { id: 'apply-jobs', label: 'Apply for Jobs →' },
+    { id: 'past-applications', label: 'Past Applications →' },
+    { id: 'recommendations', label: 'Recommendations →' },
+    { id: 'saved-jobs', label: 'Saved Jobs →' },
   ];
 
   useEffect(() => {
@@ -106,15 +107,15 @@ const JobSeekerDashboard = () => {
       {/* Header */}
       <header className="bg-white shadow p-4 flex justify-between items-center">
       <img
-    src="/images/hirenest-logo.png" // Path to your logo image
-    alt="HireNest Logo"
-    className="h-auto max-h-14 w-auto object-contain" // Adjust the height as needed
-  />
+        src="/images/hirenest-logo-new.png" // Path to your logo image
+        alt="HireNest Logo"
+        className="h-auto max-h-10 w-auto object-contain" // Adjust the height as needed
+      />
         <div className="flex items-end ml-50"><UserProfile /></div>
       </header>
 
       {/* Profile Summary */}
-      <section className="bg-white shadow p-4 flex items-center gap-4 m-4 rounded">
+      {/* <section className="bg-white shadow p-4 flex items-center gap-4 m-4 rounded">
         <img src="/images/avatar.png" alt="Profile" className="w-16 h-16 rounded-full" />
         <div>
           <p className="font-semibold text-lg">
@@ -127,7 +128,7 @@ const JobSeekerDashboard = () => {
             Edit Profile
           </button>
         </div>
-      </section>
+      </section> */}
 
       {/* Dashboard */}
       <main className="grid grid-cols-12 gap-4 m-4">
@@ -166,18 +167,19 @@ const JobSeekerDashboard = () => {
         <section className="col-span-9 bg-white p-6 rounded shadow">
           {activeTab === 'apply-jobs' && (
             <div>
-              <h2 className="text-xl font-bold mb-4">Apply for Jobs</h2>
+              <h2 className="text-xl text-blue-600 font-bold mb-4">Apply for Jobs</h2>
 
               <div className="flex flex-wrap gap-4 mb-6">
-                <input
-                  type="text"
-                  placeholder="Search by text..."
-                  className="border p-2 flex-1 rounded"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+              <input
+                type="text"
+                placeholder="Search by text..."
+                className="border-2 border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 flex-1 rounded"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+
                 <select
-                  className="border p-2 rounded"
+                  className="border-2 border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                 >
@@ -202,6 +204,8 @@ const JobSeekerDashboard = () => {
                         key={job._id}
                         className="bg-white p-6 rounded-lg border-2 border-blue-400 shadow-md hover:shadow-lg transition-shadow"
                       >
+                        
+                        <Link to={`/jobs/${job._id}`} target="_blank" rel="noopener noreferrer">
                         <h3 className="text-xl font-bold text-blue-700 mb-2">{job.title}</h3>
                         <ReadMore text={job.description} />
                         <p className="text-gray-700 text-sm my-3">{job.requirements}</p>
@@ -225,7 +229,9 @@ const JobSeekerDashboard = () => {
                             Save
                           </button>
                         </div>
+                        </Link>
                       </li>
+                      
                     ))}
                   </ul>
 

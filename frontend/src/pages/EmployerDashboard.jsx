@@ -162,18 +162,18 @@ const EmployerDashboard = () => {
   const currentJobs = postedJobs.slice(indexOfFirstJob, indexOfLastJob);
 
   const tabs = [
-    { id: 'post-jobs', label: 'Post Jobs' },
-    { id: 'posted-jobs', label: 'Posted Jobs' },
-    { id: 'applications', label: 'Applications' },
+    { id: 'post-jobs', label: 'Post Jobs →' },
+    { id: 'posted-jobs', label: 'Posted Jobs →' },
+    { id: 'applications', label: 'Applications →' },
   ];
 
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow p-4 flex justify-between items-center">
             <img
-          src="/images/hirenest-logo.png" // Path to your logo image
+          src="/images/hirenest-logo-new.png" // Path to your logo image
           alt="HireNest Logo"
-          className="h-auto max-h-14 w-auto object-contain" // Adjust the height as needed
+          className="h-auto max-h-10 w-auto object-contain" // Adjust the height as needed
         />
               <div className="flex items-end ml-50"><UserProfile /></div>
             </header>
@@ -335,7 +335,7 @@ const EmployerDashboard = () => {
 
           {activeTab === 'posted-jobs' && (
             <div>
-              <h2 className="text-xl font-bold mb-4">Your Posted Jobs</h2>
+              <h2 className="text-xl text-blue-600 font-bold mb-4">Your Posted Jobs</h2>
 
               {postedJobs.length === 0 ? (
                 <p>No posted jobs available.</p>
