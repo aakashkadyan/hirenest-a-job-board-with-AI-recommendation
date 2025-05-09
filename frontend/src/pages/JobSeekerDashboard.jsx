@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ReadMore from '../components/ReadMore';
 import ReactPaginate from 'react-paginate';
 import UserProfile from '../components/UserProfile';
 
 const JobSeekerDashboard = () => {
   const userName = localStorage.getItem('userName');
+  const userId = localStorage.getItem('userId');
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('apply-jobs');
   const [jobs, setJobs] = useState([]);
@@ -16,17 +16,16 @@ const JobSeekerDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [location, setLocation] = useState('');
   const [appliedJobs, setAppliedJobs] = useState(() => {
-    const stored = localStorage.getItem('appliedJobs');
+    const stored = localStorage.getItem(`appliedJobs_${userId}`);
     return stored ? JSON.parse(stored) : [];
   });
   const [savedJobs, setSavedJobs] = useState(() => {
-    const stored = localStorage.getItem('savedJobs');
+    const stored = localStorage.getItem(`savedJobs_${userId}`);
     return stored ? JSON.parse(stored) : [];
   });
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userRole');
+    localStorage.clear();
     navigate('/login');
   };
 
@@ -55,19 +54,57 @@ const JobSeekerDashboard = () => {
     }
   }, [activeTab, itemOffset, searchTerm, location]);
 
-  const handleApply = (job) => {
-    if (!appliedJobs.find((j) => j._id === job._id)) {
-      const updatedApplied = [
-        ...appliedJobs,
-        { ...job, status: 'pending' }, // Adding status as "pending"
-      ];
-      setAppliedJobs(updatedApplied);
-      localStorage.setItem('appliedJobs', JSON.stringify(updatedApplied));
+  useEffect(() => {
+    const fetchAppliedJobs = async () => {
+      try {
+        const res = await fetch(`http://localhost:5002/api/applications/user/${userId}`);
+        const data = await res.json();
+        if (data?.applications) {
+          setAppliedJobs(data.applications);
+          localStorage.setItem(`appliedJobs_${userId}`, JSON.stringify(data.applications));
+        }
+      } catch (err) {
+        console.error('Error fetching applied jobs:', err);
+      }
+    };
 
-      // Remove from jobs list
-      const updatedJobs = jobs.filter((j) => j._id !== job._id);
-      setJobs(updatedJobs);
+    fetchAppliedJobs();
+  }, [userId]);
+
+  const handleApply = async (job) => {
+    if (!appliedJobs.find((j) => j._id === job._id)) {
+      const updatedApplied = [...appliedJobs, { ...job, status: 'pending' }];
+      setAppliedJobs(updatedApplied);
+      localStorage.setItem(`appliedJobs_${userId}`, JSON.stringify(updatedApplied));
+
+      await fetch('http://localhost:5002/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobId: job._id,
+          jobSeekerId: userId,
+          employerId: job.employerId,
+        }),
+      });
+
+      setJobs(jobs.filter((j) => j._id !== job._id));
       setTotalJobs((prev) => prev - 1);
+    }
+  };
+
+  const handleRemoveApplication = async (jobId) => {
+    try {
+      const res = await fetch(`http://localhost:5002/api/applications/${jobId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        const updatedApplications = appliedJobs.filter((job) => job._id !== jobId);
+        setAppliedJobs(updatedApplications);
+        localStorage.setItem(`appliedJobs_${userId}`, JSON.stringify(updatedApplications));
+      }
+    } catch (error) {
+      console.error('Failed to remove application:', error);
     }
   };
 
@@ -75,11 +112,9 @@ const JobSeekerDashboard = () => {
     if (!savedJobs.find((j) => j._id === job._id)) {
       const updatedSaved = [...savedJobs, job];
       setSavedJobs(updatedSaved);
-      localStorage.setItem('savedJobs', JSON.stringify(updatedSaved));
+      localStorage.setItem(`savedJobs_${userId}`, JSON.stringify(updatedSaved));
 
-      // Remove from jobs list
-      const updatedJobs = jobs.filter((j) => j._id !== job._id);
-      setJobs(updatedJobs);
+      setJobs(jobs.filter((j) => j._id !== job._id));
       setTotalJobs((prev) => prev - 1);
     }
   };
@@ -87,9 +122,8 @@ const JobSeekerDashboard = () => {
   const handleUnsaveJob = (job) => {
     const updatedSaved = savedJobs.filter((j) => j._id !== job._id);
     setSavedJobs(updatedSaved);
-    localStorage.setItem('savedJobs', JSON.stringify(updatedSaved));
+    localStorage.setItem(`savedJobs_${userId}`, JSON.stringify(updatedSaved));
 
-    // Add back to apply jobs
     setJobs((prevJobs) => [...prevJobs, job]);
     setTotalJobs((prev) => prev + 1);
   };
@@ -102,8 +136,8 @@ const JobSeekerDashboard = () => {
     setItemOffset(newOffset);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-100">
+  // The rest of the JSX remains unchanged from your latest version and has full functionality.
+  return (    <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <header className="bg-white shadow p-4 flex justify-between items-center">
       <img
@@ -111,24 +145,8 @@ const JobSeekerDashboard = () => {
         alt="HireNest Logo"
         className="h-auto max-h-10 w-auto object-contain" // Adjust the height as needed
       />
-        <div className="flex items-end ml-50"><UserProfile /></div>
+      <div className="flex items-end ml-50"><UserProfile /></div>
       </header>
-
-      {/* Profile Summary */}
-      {/* <section className="bg-white shadow p-4 flex items-center gap-4 m-4 rounded">
-        <img src="/images/avatar.png" alt="Profile" className="w-16 h-16 rounded-full" />
-        <div>
-          <p className="font-semibold text-lg">
-            Welcome, {userName.charAt(0).toUpperCase() + userName.slice(1).toLowerCase()}
-          </p>
-          <button
-            onClick={() => navigate('/profile')}
-            className="text-blue-500 hover:underline text-sm"
-          >
-            Edit Profile
-          </button>
-        </div>
-      </section> */}
 
       {/* Dashboard */}
       <main className="grid grid-cols-12 gap-4 m-4">
@@ -201,37 +219,41 @@ const JobSeekerDashboard = () => {
                   <ul className="space-y-6">
                     {jobs.map((job) => (
                       <li
-                        key={job._id}
-                        className="bg-white p-6 rounded-lg border-2 border-blue-400 shadow-md hover:shadow-lg transition-shadow"
-                      >
-                        
-                        <Link to={`/jobs/${job._id}`} target="_blank" rel="noopener noreferrer">
-                        <h3 className="text-xl font-bold text-blue-700 mb-2">{job.title}</h3>
-                        <ReadMore text={job.description} />
-                        <p className="text-gray-700 text-sm my-3">{job.requirements}</p>
-
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
-                          <span>📍 {job.location}</span>
-                          <span>💰 {job.salaryRange ? `${job.salaryRange.currency} ${job.salaryRange.min} - ${job.salaryRange.max}` : 'Not specified'}</span>
-                        </div>
-
-                        <div className="flex gap-4">
-                          <button
-                            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 text-sm font-semibold"
-                            onClick={() => handleApply(job)}
-                          >
-                            Apply
-                          </button>
-                          <button
-                            className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 text-sm font-semibold"
-                            onClick={() => handleSaveJob(job)}
-                          >
-                            Save
-                          </button>
-                        </div>
-                        </Link>
-                      </li>
-                      
+                      key={job._id}
+                      className="bg-white p-6 rounded-lg border-2 border-blue-400 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                      onClick={() => navigate(`/jobs/${job._id}`)}
+                    >
+                      <h3 className="text-xl font-bold text-blue-700 mb-2">{job.title}</h3>
+                      <ReadMore text={job.description} />
+                      <p className="text-gray-700 text-sm my-3">{job.requirements}</p>
+                    
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
+                        <span>📍 {job.location}</span>
+                        <span>💰 {job.salaryRange ? `${job.salaryRange.currency} ${job.salaryRange.min} - ${job.salaryRange.max}` : 'Not specified'}</span>
+                      </div>
+                    
+                      <div className="flex gap-4">
+                        <button
+                          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 text-sm font-semibold"
+                          onClick={(e) => {
+                            e.stopPropagation(); // prevent navigating when clicking "Apply"
+                            handleApply(job);
+                          }}
+                        >
+                          Apply
+                        </button>
+                        <button
+                          className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 text-sm font-semibold"
+                          onClick={(e) => {
+                            e.stopPropagation(); // prevent navigating when clicking "Save"
+                            handleSaveJob(job);
+                          }}
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </li>
+                                          
                     ))}
                   </ul>
 
@@ -258,7 +280,7 @@ const JobSeekerDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'past-applications' && (
+                    {activeTab === 'past-applications' && (
             <div>
               <h2 className="text-xl font-bold mb-4">Your Applications</h2>
 
@@ -272,20 +294,27 @@ const JobSeekerDashboard = () => {
                     <ReadMore text={job.description} />
                     <p className="text-gray-700 text-sm my-3">{job.requirements}</p>
 
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-2">
                       <span>📍 {job.location}</span>
                       <span>💰 {job.salaryRange ? `${job.salaryRange.currency} ${job.salaryRange.min} - ${job.salaryRange.max}` : 'Not specified'}</span>
                     </div>
 
-                    {/* Show the application status */}
-                    <div className="flex gap-4">
-                      <span className="text-sm text-gray-500">Status: {job.status}</span>
-                    </div>
-                  </div>
+                    <div className="flex justify-between items-center">
+                  <button
+                    onClick={() => handleRemoveApplication(job._id)}
+                    className="bg-red-500 text-white px-3 py-1 text-sm rounded hover:bg-red-600"
+                  >
+                    Remove
+                  </button>
+
+                  <span className="text-sm text-gray-500">Status: {job.status}</span>
+                </div>
+                </div>
                 )) : <p>You have not applied to any jobs yet.</p>}
               </div>
             </div>
           )}
+
 
           {activeTab === 'recommendations' && (
             <div>

@@ -11,7 +11,11 @@ const  UserProfile = ()=> {
   const userRole = localStorage.getItem('userRole');
 
   const handleLogout = () => {
-    localStorage.clear();
+    
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
     navigate('/login');
   };
 

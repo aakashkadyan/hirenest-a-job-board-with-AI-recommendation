@@ -6,6 +6,7 @@ const JobDetails = () => {
   const { jobId } = useParams();
   const [job, setJob] = useState(null);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
+  const [employerProfile, setEmployerProfile] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,6 +22,16 @@ const JobDetails = () => {
       setAlreadyApplied(true);
     }
   }, [jobId]);
+
+  useEffect(() => {
+    if (job?.postedBy) {
+      fetch(`http://localhost:5002/api/employerprofile/${job.postedBy}`)
+        .then((res) => res.json())
+        .then((data) => setEmployerProfile(data))
+        .catch((err) => console.error('Error fetching employer profile:', err));
+    }
+  }, [job?.postedBy]);
+  
 
   const handleApply = () => {
     const applied = JSON.parse(localStorage.getItem('appliedJobs')) || [];
@@ -81,27 +92,49 @@ const JobDetails = () => {
         </div>
 
         {/* Right Column - Company Info */}
-        <div className="bg-gray-50 p-4 rounded-md border">
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">About Company</h3>
-          <p className="text-gray-600 text-sm">
-            <strong>Name:</strong> {job.company?.name || 'N/A'}
-          </p>
-          <p className="text-gray-600 text-sm mt-2">
-            <strong>Website:</strong>{' '}
-            {job.company?.website ? (
-              <a
-                href={job.company.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
-              >
-                {job.company.website}
-              </a>
-            ) : (
-              'N/A'
-            )}
-          </p>
-        </div>
+        
+            <div className="bg-gray-50 p-6 rounded-md border space-y-4">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Company Details</h2>
+
+              {employerProfile ? (
+                <>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-1">Basic Information</h3>
+                    <p className="text-gray-600 text-sm"><strong>Company Name:</strong> {employerProfile.companyName || 'N/A'}</p>
+                    <p className="text-gray-600 text-sm"><strong>Industry:</strong> {employerProfile.industry || 'N/A'}</p>
+                    <p className="text-gray-600 text-sm"><strong>Company Size:</strong> {employerProfile.companySize || 'N/A'}</p>
+                    <p className="text-gray-600 text-sm"><strong>Location:</strong> {employerProfile.location || 'N/A'}</p>
+                  </div>
+
+                  <div className="pt-2">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-1">Online Presence</h3>
+                    <p className="text-gray-600 text-sm">
+                      <strong>Website:</strong>{' '}
+                      {employerProfile.website ? (
+                        <a
+                          href={employerProfile.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {employerProfile.website}
+                        </a>
+                      ) : (
+                        'N/A'
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="pt-2">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-1">About the Company</h3>
+                    <p className="text-gray-600 text-sm">{employerProfile.description || 'N/A'}</p>
+                  </div>
+                </>
+              ) : (
+                <p className="text-gray-500 text-sm italic">Loading company info...</p>
+              )}
+            </div>
+
       </div>
     </div>
   );

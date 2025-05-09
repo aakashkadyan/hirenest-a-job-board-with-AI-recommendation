@@ -12,6 +12,7 @@ const EmployerDashboard = () => {
   const [activeTab, setActiveTab] = useState('post-jobs');
   const [postedJobs, setPostedJobs] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
+  const [applications, setApplications] = useState([]);
   const jobsPerPage = 5;
   const [message, setMessage] = useState('');
 
@@ -52,6 +53,7 @@ const EmployerDashboard = () => {
         ...prev,
         postedBy: userId,
       }));
+
     } else {
       alert('User ID not found. Please log in again.');
       navigate('/login');
@@ -62,6 +64,9 @@ const EmployerDashboard = () => {
     if (activeTab === 'posted-jobs') {
       fetchPostedJobs();
       setCurrentPage(0); // Reset to first page when tab changes
+    }
+    if (activeTab === 'applications') {
+      fetchApplications(); // Fetch applications when tab changes to 'applications'
     }
   }, [activeTab]);
 
@@ -139,6 +144,22 @@ const EmployerDashboard = () => {
     }
   };
 
+  const fetchApplications = async () => {
+    try {
+      const employerId = localStorage.getItem('userId');
+      const response = await fetch(`http://localhost:5002/api/applications?postedBy=${employerId}`);
+      const data = await response.json();
+      if (response.ok) {
+        setApplications(data.applications || []);
+      } else {
+        alert(data.message || 'Failed to fetch applications');
+      }
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+      alert('An error occurred while fetching applications');
+    }
+  };
+
   const handleJobDelete = async (jobId) => {
     try {
       const response = await fetch(`http://localhost:5002/api/jobs/${jobId}`, {
@@ -177,25 +198,6 @@ const EmployerDashboard = () => {
         />
               <div className="flex items-end ml-50"><UserProfile /></div>
             </header>
-
-      {/* <section className="bg-white shadow p-4 flex items-center gap-4 m-4 rounded">
-        <img
-          src="/images/avatar.png"
-          alt="Profile"
-          className="w-16 h-16 rounded-full"
-        />
-        <div>
-          <p className="font-semibold text-lg">
-            Welcome, {userName.charAt(0).toUpperCase() + userName.slice(1).toLowerCase()}
-          </p>
-          <button
-            onClick={() => navigate('/employer/profile')}
-            className="text-blue-500 hover:underline text-sm"
-          >
-            Edit Company Profile
-          </button>
-        </div>
-      </section> */}
 
       <main className="grid grid-cols-12 gap-4 m-4">
         <aside className="col-span-3 bg-white p-4 rounded shadow h-fit">
@@ -340,7 +342,7 @@ const EmployerDashboard = () => {
               {postedJobs.length === 0 ? (
                 <p>No posted jobs available.</p>
               ) : (
-                <>
+                <div>
                   <p className="text-sm text-gray-500 mb-2">
                     Showing {indexOfFirstJob + 1}–{Math.min(indexOfLastJob, postedJobs.length)} of {postedJobs.length} jobs
                   </p>
@@ -380,7 +382,40 @@ const EmployerDashboard = () => {
                     onPageChange={({ selected }) => setCurrentPage(selected)}
                     currentPage={currentPage}
                   />
-                </>
+                  
+                </div>
+              )}
+            </div>
+          )}
+          {activeTab === 'applications' && (
+            <div>
+              <h2 className="text-xl font-bold text-blue-600 mb-4">Job Applications</h2>
+              {applications.length === 0 ? (
+                <p>No applications found.</p>
+              ) : (
+                <div className="space-y-4">
+                  {applications.map((app) => (
+                    <div
+                      key={app._id}
+                      className="bg-white p-4 rounded-lg border border-gray-300 shadow"
+                    >
+                      <h3 className="text-lg font-semibold text-blue-700">{app.jobTitle}</h3>
+                      <p className="text-sm text-gray-600">Applicant: {app.applicantName}</p>
+                      <p className="text-sm text-gray-600">Status: {app.status}</p>
+                      <a href={app.resumeLink} className="text-blue-500" target="_blank" rel="noopener noreferrer">
+                        View Resume
+                      </a>
+                      <div className="mt-2">
+                        <button className="bg-green-500 text-white px-4 py-2 rounded mr-2">
+                          Shortlist
+                        </button>
+                        <button className="bg-red-500 text-white px-4 py-2 rounded">
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}
@@ -391,3 +426,10 @@ const EmployerDashboard = () => {
 };
 
 export default EmployerDashboard;
+//         </section>
+//       </main>
+//     </div>
+//   );
+// };
+
+// export default EmployerDashboard;
