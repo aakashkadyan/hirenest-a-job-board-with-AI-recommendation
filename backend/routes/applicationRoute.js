@@ -48,5 +48,32 @@ applicationRoute.get('/:id', async (req, res) => {
       res.status(500).json({ error: 'Server error', details: error.message });
     }
   });
+  
+applicationRoute.patch('/:id', async (req, res) => {
+  try {
+    const applicationId = req.params.id;
+    const { status } = req.body;
+
+    // Validate status value
+    if (!['pending', 'reviewed', 'accepted', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+
+    const updatedApplication = await Application.findByIdAndUpdate(
+      applicationId,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedApplication) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    res.status(200).json({ message: 'Status updated successfully', application: updatedApplication });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
 
 module.exports = applicationRoute;

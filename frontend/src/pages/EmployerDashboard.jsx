@@ -147,18 +147,55 @@ const EmployerDashboard = () => {
   const fetchApplications = async () => {
     try {
       const employerId = localStorage.getItem('userId');
+      if (!employerId) {
+        alert('Employer ID not found. Please log in again.');
+        return;
+      }
+  
+      // Fetch applications based on employer's posted jobs
       const response = await fetch(`http://localhost:5002/api/applications?postedBy=${employerId}`);
       const data = await response.json();
+  
       if (response.ok) {
-        setApplications(data.applications || []);
+        // Only store relevant data in the state
+        setApplications(data?.applications || []);
       } else {
-        alert(data.message || 'Failed to fetch applications');
+        alert(data?.message || 'Failed to fetch applications');
       }
     } catch (error) {
       console.error('Error fetching applications:', error);
       alert('An error occurred while fetching applications');
     }
   };
+  
+ 
+    const updateApplicationStatus = async (applicationId, newStatus) => {
+    try {
+      const response = await fetch(`http://localhost:5002/api/applications/${applicationId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        setApplications((prev) =>
+          prev.map((app) =>
+            app._id === applicationId ? { ...app, status: newStatus } : app
+          )
+        );
+      } else {
+        alert(data.message || 'Failed to update application status');
+      }
+    } catch (error) {
+      console.error('Error updating application status:', error);
+      alert('An error occurred while updating application status');
+    }
+  };
+  
 
   const handleJobDelete = async (jobId) => {
     try {
@@ -388,37 +425,61 @@ const EmployerDashboard = () => {
             </div>
           )}
           {activeTab === 'applications' && (
-            <div>
-              <h2 className="text-xl font-bold text-blue-600 mb-4">Job Applications</h2>
-              {applications.length === 0 ? (
-                <p>No applications found.</p>
-              ) : (
-                <div className="space-y-4">
-                  {applications.map((app) => (
-                    <div
-                      key={app._id}
-                      className="bg-white p-4 rounded-lg border border-gray-300 shadow"
-                    >
-                      <h3 className="text-lg font-semibold text-blue-700">{app.jobTitle}</h3>
-                      <p className="text-sm text-gray-600">Applicant: {app.applicantName}</p>
-                      <p className="text-sm text-gray-600">Status: {app.status}</p>
-                      <a href={app.resumeLink} className="text-blue-500" target="_blank" rel="noopener noreferrer">
-                        View Resume
-                      </a>
-                      <div className="mt-2">
-                        <button className="bg-green-500 text-white px-4 py-2 rounded mr-2">
-                          Shortlist
-                        </button>
-                        <button className="bg-red-500 text-white px-4 py-2 rounded">
-                          Reject
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+  <div>
+    <h2 className="text-xl font-bold text-blue-600 mb-4">Job Applications</h2>
+    {applications.length === 0 ? (
+      <p>No applications found.</p>
+    ) : (
+      <div className="space-y-4">
+        {applications.map((app) => (
+          <div
+            key={app._id}
+            className="bg-white p-4 rounded-lg border border-gray-300 shadow"
+          >
+            {/* <h3 className="text-lg font-semibold text-blue-700">{app.jobTitle}</h3>
+            <p className="text-sm text-gray-600">Applicant: {app.applicantName}</p> */}
+            <p className="text-sm text-gray-600">Status: <span className="font-semibold">{app.status}</span></p>
+            {/* <a
+              href={app.resumeLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 underline text-sm"
+            >
+              View Resume
+            </a> */}
+            {app.coverLetter && (
+              <div className="mt-2">
+                <p className="text-sm text-gray-700"><strong>Cover Letter:</strong></p>
+                <p className="text-sm text-gray-600 bg-gray-100 p-2 rounded">{app.coverLetter}</p>
+              </div>
+            )}
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={() => updateApplicationStatus(app._id, 'reviewed')}
+                className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm"
+              >
+                Mark as Reviewed
+              </button>
+              <button
+                onClick={() => updateApplicationStatus(app._id, 'shortlisted')}
+                className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
+              >
+                Shortlist
+              </button>
+              <button
+                onClick={() => updateApplicationStatus(app._id, 'rejected')}
+                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm"
+              >
+                Reject
+              </button>
             </div>
-          )}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
+
         </section>
       </main>
     </div>
@@ -426,10 +487,3 @@ const EmployerDashboard = () => {
 };
 
 export default EmployerDashboard;
-//         </section>
-//       </main>
-//     </div>
-//   );
-// };
-
-// export default EmployerDashboard;

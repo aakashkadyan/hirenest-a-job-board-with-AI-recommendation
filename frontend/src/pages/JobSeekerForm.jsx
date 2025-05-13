@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import GoBackButton from '../components/GoBackButton';
 
 const JobSeekerForm = () => {
@@ -69,7 +68,6 @@ const JobSeekerForm = () => {
       )
     }));
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
   
@@ -92,21 +90,13 @@ const JobSeekerForm = () => {
         data.append('resume', formData.resume);
       }
   
-      const res = await fetch(`http://localhost:5002/api/jobseekers/${userId}`, {
+      const url = isProfileExists
+        ? `http://localhost:5002/api/jobseekers/${userId}` // PUT: update existing
+        : `http://localhost:5002/api/jobseekers`;          // POST: create new
+  
+      const res = await fetch(url, {
         method: isProfileExists ? 'PUT' : 'POST',
-        headers: isProfileExists ? { 'Content-Type': 'application/json' } : undefined,
-        body: isProfileExists
-          ? JSON.stringify({
-              user: formData.user,
-              bio: formData.bio,
-              skills: skillsArray,
-              experience: formData.experience,
-              education: formData.education,
-              jobPreferences: formData.jobPreferences,
-              resume: formData.resume ? formData.resume.name : undefined, 
-              lastUpdatedAt: new Date().toISOString()// optional
-            })
-          : data
+        body: data // Always send FormData
       });
   
       if (!res.ok) throw new Error('Failed to submit form');
@@ -121,7 +111,9 @@ const JobSeekerForm = () => {
       alert('There was an error submitting the form.');
     }
   };
-  console.log('formData:', formData);
+    
+  
+console.log('formData:', formData);
 
   return (
 

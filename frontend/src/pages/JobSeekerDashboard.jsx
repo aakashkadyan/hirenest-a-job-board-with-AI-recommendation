@@ -57,7 +57,7 @@ const JobSeekerDashboard = () => {
   useEffect(() => {
     const fetchAppliedJobs = async () => {
       try {
-        const res = await fetch(`http://localhost:5002/api/applications/user/${userId}`);
+        const res = await fetch(`http://localhost:5002/api/applications/${userId}`);
         const data = await res.json();
         if (data?.applications) {
           setAppliedJobs(data.applications);
@@ -76,22 +76,46 @@ const JobSeekerDashboard = () => {
       const updatedApplied = [...appliedJobs, { ...job, status: 'pending' }];
       setAppliedJobs(updatedApplied);
       localStorage.setItem(`appliedJobs_${userId}`, JSON.stringify(updatedApplied));
-
-      await fetch('http://localhost:5002/api/applications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jobId: job._id,
-          jobSeekerId: userId,
-          employerId: job.employerId,
-        }),
-      });
-
-      setJobs(jobs.filter((j) => j._id !== job._id));
-      setTotalJobs((prev) => prev - 1);
+  
+      try {
+        // Step 1: Fetch resume by jobseeker ID
+        const resumeRes = await fetch(`http://localhost:5002/api/jobseekers/${userId}`);
+        const resumeData = await resumeRes.json();
+  
+        if (!resumeRes.ok || !resumeData._id) {
+          console.error("Failed to fetch resume or resume ID not found.");
+          return;
+        }
+  
+        const resumeId = resumeData._id;
+  
+        // Step 2: Submit application
+        const response = await fetch('http://localhost:5002/api/applications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            job: job._id,
+            applicant: userId,
+            resume: resumeId,
+            coverLetter: "I am passionate about this opportunity and confident in my skills to contribute effectively.",
+          }),
+        });
+  
+        const data = await response.json();
+        if (!response.ok) {
+          console.error("Failed to submit application:", data);
+        } else {
+          console.log("Application submitted successfully:", data);
+          setJobs(jobs.filter((j) => j._id !== job._id));
+          setTotalJobs((prev) => prev - 1);
+        }
+      } catch (error) {
+        console.error("Error during application submission:", error);
+      }
     }
   };
-
+  
+  
   const handleRemoveApplication = async (jobId) => {
     try {
       const res = await fetch(`http://localhost:5002/api/applications/${jobId}`, {

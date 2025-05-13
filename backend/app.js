@@ -74,6 +74,7 @@ const startServer = async () => {
     app.use('/api/employerprofile', employerprofileRoute);
     app.use('/api/recommendation', recommendationRoute);
     app.use('/api/jobseekers', JobSeekerRoute);
+    app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
     //app.use(verifyToken, jobsRouter);
