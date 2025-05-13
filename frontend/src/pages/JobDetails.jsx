@@ -17,11 +17,15 @@ const JobDetails = () => {
   }, [jobId]);
 
   useEffect(() => {
-    const applied = JSON.parse(localStorage.getItem('appliedJobs')) || [];
-    if (applied.find((j) => j._id === jobId)) {
-      setAlreadyApplied(true);
-    }
-  }, [jobId]);
+    const userId = localStorage.getItem('userId');
+    if (!userId || !jobId) return;
+  
+    const appliedKey = `appliedJobs_${userId}`;
+    const appliedJobs = JSON.parse(localStorage.getItem(appliedKey)) || [];
+  
+    const hasApplied = appliedJobs.some((j) => j._id === jobId);
+    setAlreadyApplied(hasApplied);
+  }, [jobId]);  
 
   useEffect(() => {
     if (job?.postedBy) {
@@ -34,15 +38,23 @@ const JobDetails = () => {
   
 
   const handleApply = () => {
-    const applied = JSON.parse(localStorage.getItem('appliedJobs')) || [];
-
-    if (!applied.find((j) => j._id === job._id)) {
-      const updatedApplied = [...applied, { ...job, status: 'pending' }];
-      localStorage.setItem('appliedJobs', JSON.stringify(updatedApplied));
+    const userId = localStorage.getItem('userId');
+    if (!userId || !job) {
+      alert('User not logged in or job not loaded');
+      return;
+    }
+  
+    const appliedKey = `appliedJobs_${userId}`;
+    const appliedJobs = JSON.parse(localStorage.getItem(appliedKey)) || [];
+  
+    if (!appliedJobs.find((j) => j._id === job._id)) {
+      const updatedJobs = [...appliedJobs, { ...job, status: 'pending' }];
+      localStorage.setItem(appliedKey, JSON.stringify(updatedJobs));
       setAlreadyApplied(true);
       navigate('/jobseekerdashboard');
     }
   };
+  
 
   if (!job) return <p className="text-center mt-10 text-gray-600">Loading...</p>;
 

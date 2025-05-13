@@ -324,12 +324,12 @@ const JobSeekerDashboard = () => {
                     </div>
 
                     <div className="flex justify-between items-center">
-                  <button
+                  {/* <button
                     onClick={() => handleRemoveApplication(job._id)}
                     className="bg-red-500 text-white px-3 py-1 text-sm rounded hover:bg-red-600"
                   >
                     Remove
-                  </button>
+                  </button> */}
 
                   <span className="text-sm text-gray-500">Status: {job.status}</span>
                 </div>
