@@ -76,6 +76,7 @@ const startServer = async () => {
     app.use('/api/recommendation', recommendationRoute);
     app.use('/api/jobseekers', JobSeekerRoute);
     app.use('/api/send-email', emailNotification);
+    app.use('/api/email', emailNotification);
     app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
