@@ -8,13 +8,8 @@ const applicationSchema = new mongoose.Schema({
   },
   applicant: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'JobSeeker',
     required: [true, 'Applicant reference is required']
-  },
-  resume: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Resume',
-    required: [true, 'Resume reference is required']
   },
   coverLetter: {
     type: String,

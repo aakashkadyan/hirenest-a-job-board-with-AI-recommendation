@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CitySelect from '../components/CitySelect';
 import JobTitleSelect from '../components/JobTitleSelect';
+import { toast } from 'react-toastify';
 import Pagination from '../components/Pagination';
 import UserProfile from '../components/UserProfile';
 
@@ -13,8 +14,15 @@ const EmployerDashboard = () => {
   const [postedJobs, setPostedJobs] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [applications, setApplications] = useState([]);
+  const [applicationsPage, setApplicationsPage] = useState(0);
+  const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
   const jobsPerPage = 5;
+  const applicationsPerPage = 5;
   const [message, setMessage] = useState('');
+
+  const indexOfFirstApplication = applicationsPage * applicationsPerPage;
+  const indexOfLastApplication = indexOfFirstApplication + applicationsPerPage;
+  const currentApplications = applications.slice(indexOfFirstApplication, indexOfLastApplication); 
 
   const [jobForm, setJobForm] = useState({
     title: '',
@@ -93,6 +101,29 @@ const EmployerDashboard = () => {
     }
   };
 
+  const sendEmail = async (to, subject, text) => {
+    try {
+      const res = await fetch('http://localhost:5002/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ to, subject, text }),
+      });
+  
+      const result = await res.json();
+      if (res.ok) {
+        toast.success(`Email sent to ${to}`);
+      } else {
+        toast.error(result.message || 'Failed to send email');
+      }
+    } catch (err) {
+      console.error('Email send error:', err);
+      toast.error('Something went wrong while sending the email.');
+    }
+  };
+  
+
   const handleJobSubmit = async (e) => {
     e.preventDefault();
 
@@ -147,6 +178,8 @@ const EmployerDashboard = () => {
   const fetchApplications = async () => {
     try {
       const employerId = localStorage.getItem('userId');
+      console.log('Employer ID:', employerId);
+    
       if (!employerId) {
         alert('Employer ID not found. Please log in again.');
         return;
@@ -154,7 +187,10 @@ const EmployerDashboard = () => {
   
       // Fetch applications based on employer's posted jobs
       const response = await fetch(`http://localhost:5002/api/applications?postedBy=${employerId}`);
+
       const data = await response.json();
+
+      console.log('Applications Data:', data);
   
       if (response.ok) {
         // Only store relevant data in the state
@@ -167,8 +203,7 @@ const EmployerDashboard = () => {
       alert('An error occurred while fetching applications');
     }
   };
-  
- 
+
     const updateApplicationStatus = async (applicationId, newStatus) => {
     try {
       const response = await fetch(`http://localhost:5002/api/applications/${applicationId}`, {
@@ -193,6 +228,21 @@ const EmployerDashboard = () => {
     } catch (error) {
       console.error('Error updating application status:', error);
       alert('An error occurred while updating application status');
+    }
+  };
+  
+  const handleViewResume = async (userId) => {
+    try {
+      const res = await fetch(`http://localhost:5002/api/jobseekers/${userId}`);
+      const data = await res.json();
+      if (res.ok) {
+        setSelectedJobSeeker(data.jobSeeker);
+      } else {
+        alert('Failed to fetch jobseeker profile');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred');
     }
   };
   
@@ -425,60 +475,104 @@ const EmployerDashboard = () => {
             </div>
           )}
           {activeTab === 'applications' && (
-  <div>
-    <h2 className="text-xl font-bold text-blue-600 mb-4">Job Applications</h2>
-    {applications.length === 0 ? (
-      <p>No applications found.</p>
-    ) : (
-      <div className="space-y-4">
-        {applications.map((app) => (
-          <div
-            key={app._id}
-            className="bg-white p-4 rounded-lg border border-gray-300 shadow"
-          >
-            {/* <h3 className="text-lg font-semibold text-blue-700">{app.jobTitle}</h3>
-            <p className="text-sm text-gray-600">Applicant: {app.applicantName}</p> */}
-            <p className="text-sm text-gray-600">Status: <span className="font-semibold">{app.status}</span></p>
-            {/* <a
-              href={app.resumeLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 underline text-sm"
-            >
-              View Resume
-            </a> */}
-            {app.coverLetter && (
-              <div className="mt-2">
-                <p className="text-sm text-gray-700"><strong>Cover Letter:</strong></p>
-                <p className="text-sm text-gray-600 bg-gray-100 p-2 rounded">{app.coverLetter}</p>
-              </div>
-            )}
-            <div className="mt-3 flex gap-2">
-              <button
-                onClick={() => updateApplicationStatus(app._id, 'reviewed')}
-                className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm"
-              >
-                Mark as Reviewed
-              </button>
-              <button
-                onClick={() => updateApplicationStatus(app._id, 'shortlisted')}
-                className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
-              >
-                Shortlist
-              </button>
-              <button
-                onClick={() => updateApplicationStatus(app._id, 'rejected')}
-                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm"
-              >
-                Reject
-              </button>
+            <div>
+              <h2 className="text-xl font-bold text-blue-600 mb-4">Job Applications</h2>
+
+              {applications.length === 0 ? (
+                <p>No applications found.</p>
+              ) : (
+                <div>
+                  <p className="text-sm text-gray-500 mb-2">
+                    Showing {indexOfFirstApplication + 1}–{Math.min(indexOfLastApplication, applications.length)} of {applications.length} applications
+                  </p>
+
+                  <div className="space-y-4">
+                    {currentApplications.map((app) => (
+                      <div
+                        key={app._id}
+                        className="bg-white p-4 rounded-lg border border-gray-300 shadow"
+                      >
+                        <h3 className="text-lg font-semibold text-blue-700">
+                          Applicant: {app?.applicant?.user?.name}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Email: {app?.applicant?.user?.email}
+                        </p>
+
+                        {app?.resume?.url && (
+                          <a
+                            href={app.resume.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 underline text-sm"
+                          >
+                            View Resume
+                          </a>
+                        )}
+
+                        {app.coverLetter && (
+                          <div className="mt-2">
+                            <p className="text-sm text-gray-700"><strong>Cover Letter:</strong></p>
+                            <p className="text-sm text-gray-600 bg-gray-100 p-2 rounded">{app.coverLetter}</p>
+                          </div>
+                        )}
+
+                        {app.job && (
+                          <div className="mt-2">
+                            <p className="text-sm text-gray-700"><strong>Job Title:</strong> {app.job.title}</p>
+                            <p className="text-sm text-gray-600"><strong>Description:</strong> {app.job.description.slice(0, 100)}</p>
+                            <p className="text-sm text-gray-600"><strong>Location:</strong> {app.job.location}</p>
+                          </div>
+                        )}
+
+                        <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+  onClick={() =>
+    sendEmail(
+      app?.applicant?.user?.email,
+      'Application Reviewed!!!!!',
+      'Your application has been reviewed. We will get back to you shortly.'
+    )
+  }
+  className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm"
+>
+  Mark as Reviewed
+</button>
+                          <button
+                            onClick={() => handleViewResume(app.applicant.user._id)}
+                            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
+                          >
+                            View Resume
+                          </button>
+
+                          <button
+                            onClick={() => updateApplicationStatus(app._id, 'shortlisted')}
+                            className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
+                          >
+                            Shortlist
+                          </button>
+
+                          <button
+                            onClick={() => updateApplicationStatus(app._id, 'rejected')}
+                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Pagination
+                    pageCount={Math.ceil(applications.length / applicationsPerPage)}
+                    onPageChange={({ selected }) => setApplicationsPage(selected)}
+                    currentPage={applicationsPage}
+                  />
+                </div>
+              )}
             </div>
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-)}
+          )}
+
 
         </section>
       </main>

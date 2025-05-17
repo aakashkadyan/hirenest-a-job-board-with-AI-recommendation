@@ -72,32 +72,34 @@ const JobSeekerDashboard = () => {
   }, [userId]);
 
   const handleApply = async (job) => {
+    const userId = localStorage.getItem("userId");
+  
     if (!appliedJobs.find((j) => j._id === job._id)) {
       const updatedApplied = [...appliedJobs, { ...job, status: 'pending' }];
       setAppliedJobs(updatedApplied);
       localStorage.setItem(`appliedJobs_${userId}`, JSON.stringify(updatedApplied));
   
       try {
-        // Step 1: Fetch resume by jobseeker ID
+        // Fetch JobSeeker profile using the userId
         const resumeRes = await fetch(`http://localhost:5002/api/jobseekers/${userId}`);
         const resumeData = await resumeRes.json();
   
         if (!resumeRes.ok || !resumeData._id) {
-          console.error("Failed to fetch resume or resume ID not found.");
+          console.error("Failed to fetch JobSeeker profile.");
           return;
         }
   
-        const resumeId = resumeData._id;
+        const jobSeekerId = resumeData._id; // ✅ This is the correct applicant ID
   
-        // Step 2: Submit application
+        // Submit application
         const response = await fetch('http://localhost:5002/api/applications', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             job: job._id,
-            applicant: userId,
-            resume: resumeId,
-            coverLetter: "I am passionate about this opportunity and confident in my skills to contribute effectively.",
+            applicant: jobSeekerId, 
+            resume: jobSeekerId,   
+            coverLetter: `I am genuinely excited about the opportunity to contribute to the ${job.title} role, and I am confident that my skills and experience align well with your expectations.`,
           }),
         });
   

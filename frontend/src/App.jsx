@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Contact from './pages/Contact'
 import Signup from './pages/Signup'
 import EditJob from './components/EditJob'
+import { ToastContainer, toast } from 'react-toastify'
 import JobSeekerDashboard from './pages/JobSeekerDashboard'
 import EmployerDashboard from './pages/EmployerDashboard'
 import ProtectedRoute from './authvalidation/ProtectedRoute'
@@ -19,6 +20,7 @@ import { BrowserRouter as Router,Routes, Route } from "react-router";
 
 function App() {
   return (
+    
     <Router>
       <div>
         <Routes>
@@ -65,13 +67,15 @@ function App() {
           
           
         </Routes>
+        
       </div>
 
     {/* <Header/>
       <Home />
     <Footer /> */}
-    
+    <ToastContainer position="top-right" autoClose={8000} />
     </Router>
+    
   )
 }
 

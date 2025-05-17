@@ -12,6 +12,7 @@ const applicationRoute = require("./routes/applicationRoute");
 const employerprofileRoute = require("./routes/employerprofileRoute");
 const recommendationRoute = require("./routes/recommendationRoute");
 const JobSeekerRoute = require("./routes/jobSeekerRoute")
+const emailNotification = require("./routes/emailNotification");
 dotenv.config();
 
 
@@ -74,6 +75,7 @@ const startServer = async () => {
     app.use('/api/employerprofile', employerprofileRoute);
     app.use('/api/recommendation', recommendationRoute);
     app.use('/api/jobseekers', JobSeekerRoute);
+    app.use('/api/send-email', emailNotification);
     app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 

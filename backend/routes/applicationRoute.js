@@ -36,7 +36,7 @@ applicationRoute.get('/:id', async (req, res) => {
       // Find applications for the given job ID & populate applicant and resume details
       const applications = await Application.find({ job: jobId })
         .populate('applicant', 'name email') // Fetch applicant's name & email
-        .populate('resume', 'url') // Fetch resume URL if stored
+        // .populate('resume', 'url') // Fetch resume URL if stored
   
       
       if (!applications || applications.length === 0) {
@@ -48,6 +48,40 @@ applicationRoute.get('/:id', async (req, res) => {
       res.status(500).json({ error: 'Server error', details: error.message });
     }
   });
+
+  applicationRoute.get('/', async (req, res) => {
+    try {
+      const { postedBy } = req.query;
+  
+      if (!postedBy) {
+        return res.status(400).json({ message: 'Missing postedBy parameter' });
+      }
+  
+      const Job = require('../models/Job'); // Make sure it's imported
+      const jobs = await Job.find({ postedBy });
+      const jobIds = jobs.map(job => job._id);
+  
+      const applications = await Application.find({ job: { $in: jobIds } })
+        .populate({
+          path: 'applicant',
+          select: 'bio skills experience education resume user', // From JobSeeker
+          populate: {
+            path: 'user',
+            select: 'name email' // From User model
+          }
+        })
+        .populate({
+          path: 'job',
+          select: 'title description location company' // Add fields you want
+        });
+  
+      res.status(200).json({ applications });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Server error', details: error.message });
+    }
+  });
+  
   
 applicationRoute.patch('/:id', async (req, res) => {
   try {

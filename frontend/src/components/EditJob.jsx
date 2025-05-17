@@ -95,109 +95,121 @@ const EditJob = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-md">
-      <h2 className="text-2xl font-semibold mb-4">Edit Job</h2>
-      <form onSubmit={handleJobUpdate}>
-        <div className="space-y-4">
+    <div className="max-w-4xl mx-auto mt-10 mb-10 p-8 bg-blue-50 border border-blue-300 shadow-md rounded-md">
+      <h2 className="text-2xl font-bold text-blue-700 mb-6">Edit Job</h2>
+      <form onSubmit={handleJobUpdate} className="space-y-6">
+        {/* Job Title */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-1">Job Title</label>
+          <input
+            type="text"
+            name="title"
+            value={jobForm.title}
+            onChange={handleFormChange}
+            required
+            className="w-full px-4 py-2 border border-blue-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+  
+        {/* Job Description */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-1">Job Description</label>
+          <textarea
+            name="description"
+            value={jobForm.description}
+            onChange={handleFormChange}
+            required
+            rows="4"
+            className="w-full px-4 py-2 border border-blue-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+  
+        {/* Requirements */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-1">Requirements</label>
+          <textarea
+            name="requirements"
+            value={jobForm.requirements}
+            onChange={handleFormChange}
+            rows="3"
+            className="w-full px-4 py-2 border border-blue-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+  
+        {/* Salary and Currency */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium">Job Title</label>
+            <label className="block text-gray-700 font-medium mb-1">Min Salary (INR)</label>
             <input
-              type="text"
-              name="title"
-              value={jobForm.title}
+              type="number"
+              name="min"
+              value={jobForm.salaryRange.min}
               onChange={handleFormChange}
-              required
-              className="w-full p-2 border rounded"
+              className="w-full px-4 py-2 border border-blue-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium">Job Description</label>
-            <textarea
-              name="description"
-              value={jobForm.description}
-              onChange={handleFormChange}
-              required
-              className="w-full p-2 border rounded h-24"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Requirements</label>
-            <textarea
-              name="requirements"
-              value={jobForm.requirements}
-              onChange={handleFormChange}
-              className="w-full p-2 border rounded h-20"
-            />
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium">Min Salary (INR)</label>
-              <input
-                type="number"
-                name="min"
-                value={jobForm.salaryRange.min}
-                onChange={handleFormChange}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Max Salary (INR)</label>
-              <input
-                type="number"
-                name="max"
-                value={jobForm.salaryRange.max}
-                onChange={handleFormChange}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Currency</label>
-              <select
-                name="currency"
-                value={jobForm.salaryRange.currency}
-                onChange={handleFormChange}
-                className="w-full p-2 border rounded"
-              >
-                <option value="INR">INR</option>
-                <option value="USD">USD</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Location</label>
+            <label className="block text-gray-700 font-medium mb-1">Max Salary (INR)</label>
             <input
-              type="text"
-              name="location"
-              value={jobForm.location}
+              type="number"
+              name="max"
+              value={jobForm.salaryRange.max}
               onChange={handleFormChange}
-              required
-              className="w-full p-2 border rounded"
+              className="w-full px-4 py-2 border border-blue-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium">Job Type</label>
+            <label className="block text-gray-700 font-medium mb-1">Currency</label>
             <select
-              name="type"
-              value={jobForm.type}
+              name="currency"
+              value={jobForm.salaryRange.currency}
               onChange={handleFormChange}
-              className="w-full p-2 border rounded"
+              className="w-full px-4 py-2 border border-blue-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="full-time">Full-Time</option>
-              <option value="part-time">Part-Time</option>
-              <option value="contract">Contract</option>
-              <option value="internship">Internship</option>
+              <option value="INR">INR</option>
+              <option value="USD">USD</option>
             </select>
           </div>
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Update Job
-          </button>
         </div>
+  
+        {/* Location */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-1">Location</label>
+          <input
+            type="text"
+            name="location"
+            value={jobForm.location}
+            onChange={handleFormChange}
+            required
+            className="w-full px-4 py-2 border border-blue-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+  
+        {/* Job Type */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-1">Job Type</label>
+          <select
+            name="type"
+            value={jobForm.type}
+            onChange={handleFormChange}
+            className="w-full px-4 py-2 border border-blue-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="full-time">Full-Time</option>
+            <option value="part-time">Part-Time</option>
+            <option value="contract">Contract</option>
+            <option value="internship">Internship</option>
+          </select>
+        </div>
+  
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors"
+        >
+          Update Job
+        </button>
       </form>
     </div>
   );
-};
-
+}
 export default EditJob;
