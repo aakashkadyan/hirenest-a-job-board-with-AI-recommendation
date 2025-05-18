@@ -27,13 +27,6 @@ const Header = () => {
       <div>
       <Link to ="/login" className='hover:scale-110 cursor-pointer bg-blue-500 text-white font-semibold rounded px-4 py-2'>Login</Link>
       </div>
-
-      
-      {/* <input
-        type="text"
-        placeholder="Search jobs..."
-        className="px-4 py-1 rounded bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
-      /> */}
     </div>
   </div>
 </header>

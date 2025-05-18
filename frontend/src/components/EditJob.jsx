@@ -20,25 +20,33 @@ const EditJob = () => {
   // Fetch the job data by jobId
   useEffect(() => {
     const fetchJobData = async () => {
-        try {
-          const response = await fetch(`http://localhost:5002/api/jobs/${jobId}`);
-          const data = await response.json();
-          console.log(data);  // Log the response data
-      
-          if (response.ok) {
-            setJobForm(data.job);
-          } else {
-            alert(data.message || 'Failed to fetch job details');
-          }
-        } catch (error) {
-          console.error('Error fetching job data:', error);
-          alert('An error occurred while fetching the job data');
+      try {
+        const response = await fetch(`http://localhost:5002/api/jobs/${jobId}`);
+        const data = await response.json();
+  
+        if (response.ok) {
+          // Convert salary min/max to numbers explicitly
+          const job = {
+            ...data.job,
+            salaryRange: {
+              ...data.job.salaryRange,
+              min: Number(data.job.salaryRange.min),
+              max: Number(data.job.salaryRange.max),
+            },
+          };
+          setJobForm(job);
+        } else {
+          alert(data.message || 'Failed to fetch job details');
         }
-      };      
-
+      } catch (error) {
+        console.error('Error fetching job data:', error);
+        alert('An error occurred while fetching the job data');
+      }
+    };
+  
     fetchJobData();
   }, [jobId]);
-
+  
   const handleFormChange = (e) => {
     const { name, value } = e.target;
   
@@ -82,9 +90,10 @@ const EditJob = () => {
       });
 
       const data = await response.json();
+      console.log("JOB FORM :",data);  // Log the response data
       if (response.ok) {
         alert('Job updated successfully!');
-        navigate('/employer/dashboard');  // Redirect to dashboard after successful update
+        navigate('/employerdashboard');  // Redirect to dashboard after successful update
       } else {
         alert(data.message || 'Failed to update job');
       }

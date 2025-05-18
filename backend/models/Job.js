@@ -10,10 +10,12 @@ const salarySchema = new mongoose.Schema({
     required: [true, 'Maximum salary is required'],
     validate: {
       validator: function (value) {
-        return value >= this.min; // Ensure max salary is greater than min salary
+        if (typeof value !== 'number' || typeof this.min !== 'number') return true;
+        return value >= this.min;
       },
       message: 'Max salary must be greater than or equal to min salary.',
     },
+    
   },
   currency: {
     type: String,
