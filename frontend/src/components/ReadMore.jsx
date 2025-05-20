@@ -8,7 +8,7 @@ const ReadMore = ({ text, maxChars = 150 }) => {
   if (!text) return null;
 
   return (
-    <p className="text-gray-700 text-sm mb-2">
+    <p className="text-gray-600 text-sm mb-2"> Job Desc - 
       {isExpanded ? text : `${text.slice(0, maxChars)}${text.length > maxChars ? "..." : ""}`}
       {text.length > maxChars && (
         <button

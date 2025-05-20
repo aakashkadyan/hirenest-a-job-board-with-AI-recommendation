@@ -89,7 +89,7 @@ applicationRoute.patch('/:id', async (req, res) => {
     const { status } = req.body;
 
     // Validate status value
-    if (!['pending', 'reviewed', 'accepted', 'rejected'].includes(status)) {
+    if (!['pending', 'reviewed', 'shortlisted', 'rejected'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status value' });
     }
 

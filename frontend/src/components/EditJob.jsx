@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { useParams, useNavigate } from 'react-router-dom';
 
 const EditJob = () => {
@@ -36,11 +37,11 @@ const EditJob = () => {
           };
           setJobForm(job);
         } else {
-          alert(data.message || 'Failed to fetch job details');
+          toast.error(data.message || 'Failed to fetch job details');
         }
       } catch (error) {
         console.error('Error fetching job data:', error);
-        alert('An error occurred while fetching the job data');
+        toast.error('An error occurred while fetching the job data');
       }
     };
   
@@ -92,14 +93,14 @@ const EditJob = () => {
       const data = await response.json();
       console.log("JOB FORM :",data);  // Log the response data
       if (response.ok) {
-        alert('Job updated successfully!');
+        toast.success('Job updated successfully!');
         navigate('/employerdashboard');  // Redirect to dashboard after successful update
       } else {
-        alert(data.message || 'Failed to update job');
+        toast.error(data.message || 'Failed to update job');
       }
     } catch (error) {
       console.error('Error updating job:', error);
-      alert('An error occurred while updating the job');
+      toast.error('An error occurred while updating the job');
     }
   };
 

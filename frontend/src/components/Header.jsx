@@ -25,13 +25,18 @@ const Header = () => {
         <Link to="/contact" className="hover:text-[#146edb] hover:scale-105 text-lg font-semibold">Contact Us</Link>
       </nav>
       <div>
-      <Link to ="/login" className='hover:scale-110 cursor-pointer bg-blue-500 text-white font-semibold rounded px-4 py-2'>Login</Link>
+  <Link to="/login"
+    className="text-white-500 text-lg font-semibold rounded px-4 py-2 hover:border hover:border-blue-500 transition-all duration-200"
+  >
+    Login
+  </Link>
+</div>
+      <div>
+      <Link to ="/signup" className='hover:scale-110 cursor-pointer bg-blue-500 text-white font-semibold rounded px-4 py-2'>Signup</Link>
       </div>
     </div>
   </div>
 </header>
-
-
     </>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CitySelect from '../components/CitySelect';
 import JobTitleSelect from '../components/JobTitleSelect';
+import ReadMore from '../components/ReadMore';
 import { toast } from 'react-toastify';
 import Pagination from '../components/Pagination';
 import UserProfile from '../components/UserProfile';
@@ -13,6 +14,8 @@ const EmployerDashboard = () => {
   const [activeTab, setActiveTab] = useState('post-jobs');
   const [postedJobs, setPostedJobs] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
+  const [jobSearchQuery, setJobSearchQuery] = useState('');
+  const [applicationSearchQuery, setApplicationSearchQuery] = useState('');
   const [applications, setApplications] = useState([]);
   const [applicationsPage, setApplicationsPage] = useState(0);
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
@@ -22,8 +25,15 @@ const EmployerDashboard = () => {
 
   const indexOfFirstApplication = applicationsPage * applicationsPerPage;
   const indexOfLastApplication = indexOfFirstApplication + applicationsPerPage;
-  const currentApplications = applications.slice(indexOfFirstApplication, indexOfLastApplication); 
-
+  const filteredApplications = applications.filter((app) =>
+    app.job?.title?.toLowerCase().includes(applicationSearchQuery.toLowerCase()) ||
+    app.job?.location?.toLowerCase().includes(applicationSearchQuery.toLowerCase()) ||
+    app.applicant?.name?.toLowerCase().includes(applicationSearchQuery.toLowerCase()) ||
+    app.applicant?.location?.toLowerCase().includes(applicationSearchQuery.toLowerCase())
+  );
+  
+  const currentApplications = filteredApplications.slice(indexOfFirstApplication, indexOfLastApplication);
+  
   const [jobForm, setJobForm] = useState({
     title: '',
     description: '',
@@ -63,7 +73,7 @@ const EmployerDashboard = () => {
       }));
 
     } else {
-      alert('User ID not found. Please log in again.');
+      toast.error('User ID not found. Please log in again.');
       navigate('/login');
     }
   }, []);
@@ -151,11 +161,11 @@ const EmployerDashboard = () => {
           postedBy: localStorage.getItem('userId'),
         });
       } else {
-        alert(data.message || 'Failed to post job');
+        toast.error(data.message || 'Failed to post job');
       }
     } catch (error) {
       console.error('Error posting job:', error);
-      alert('An error occurred while posting the job');
+      toast.error('An error occurred while posting the job');
     }
   };
 
@@ -167,11 +177,11 @@ const EmployerDashboard = () => {
       if (response.ok) {
         setPostedJobs(data.jobs);
       } else {
-        alert(data.message || 'Failed to fetch posted jobs');
+        toast.error(data.message || 'Failed to fetch posted jobs');
       }
     } catch (error) {
       console.error('Error fetching posted jobs:', error);
-      alert('An error occurred while fetching jobs');
+      toast.error('An error occurred while fetching jobs');
     }
   };
 
@@ -181,7 +191,7 @@ const EmployerDashboard = () => {
       console.log('Employer ID:', employerId);
     
       if (!employerId) {
-        alert('Employer ID not found. Please log in again.');
+        toast.error('Employer ID not found. Please log in again.');
         return;
       }
   
@@ -196,11 +206,11 @@ const EmployerDashboard = () => {
         // Only store relevant data in the state
         setApplications(data?.applications || []);
       } else {
-        alert(data?.message || 'Failed to fetch applications');
+        toast.error(data?.message || 'Failed to fetch applications');
       }
     } catch (error) {
       console.error('Error fetching applications:', error);
-      alert('An error occurred while fetching applications');
+      toast.error('An error occurred while fetching applications');
     }
   };
 
@@ -223,11 +233,11 @@ const EmployerDashboard = () => {
           )
         );
       } else {
-        alert(data.message || 'Failed to update application status');
+        toast.error(data.message || 'Failed to update application status');
       }
     } catch (error) {
       console.error('Error updating application status:', error);
-      alert('An error occurred while updating application status');
+      toast.error('An error occurred while updating application status');
     }
   };
   
@@ -238,11 +248,11 @@ const EmployerDashboard = () => {
       if (res.ok) {
         setSelectedJobSeeker(data.jobSeeker);
       } else {
-        alert('Failed to fetch jobseeker profile');
+        toast.error('Failed to fetch jobseeker profile');
       }
     } catch (err) {
       console.error(err);
-      alert('An error occurred');
+      toast.error('An error occurred');
     }
   };
   
@@ -255,20 +265,24 @@ const EmployerDashboard = () => {
       const data = await response.json();
       if (response.ok) {
         setPostedJobs((prev) => prev.filter((job) => job._id !== jobId));
-        alert('Job deleted successfully');
+        toast.success('Job deleted successfully');
       } else {
-        alert(data.message || 'Failed to delete job');
+        toast.error(data.message || 'Failed to delete job');
       }
     } catch (error) {
       console.error('Error deleting job:', error);
-      alert('An error occurred while deleting the job');
+      toast.error('An error occurred while deleting the job');
     }
   };
 
   const indexOfLastJob = (currentPage + 1) * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-  const currentJobs = postedJobs.slice(indexOfFirstJob, indexOfLastJob);
-
+  const filteredJobs = postedJobs.filter((job) =>
+    job.title.toLowerCase().includes(jobSearchQuery.toLowerCase()) ||
+    job.location.toLowerCase().includes(jobSearchQuery.toLowerCase())
+  );
+  const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
+  
   const tabs = [
     { id: 'post-jobs', label: 'Post Jobs →' },
     { id: 'posted-jobs', label: 'Posted Jobs →' },
@@ -421,59 +435,73 @@ const EmployerDashboard = () => {
             </form>
           </div>
         )}
+{activeTab === 'posted-jobs' && (
+  <div>
 
-          {activeTab === 'posted-jobs' && (
-            <div>
-              <h2 className="text-xl text-blue-600 font-bold mb-4">Your Posted Jobs</h2>
+    <h2 className="text-xl text-blue-600 font-bold mb-4">Your Posted Jobs</h2>
+    
 
-              {postedJobs.length === 0 ? (
-                <p>No posted jobs available.</p>
-              ) : (
-                <div>
-                  <p className="text-sm text-gray-500 mb-2">
-                    Showing {indexOfFirstJob + 1}–{Math.min(indexOfLastJob, postedJobs.length)} of {postedJobs.length} jobs
-                  </p>
-                  <div className="space-y-6">
-                  {currentJobs.map((job) => (
-                    <div
-                      key={job._id}
-                      className="bg-white p-6 rounded-lg border-2 border-blue-400 shadow-md hover:shadow-lg transition-shadow"
-                    >
-                      <div className="mb-4">
-                        <h3 className="text-xl font-bold text-blue-700">{job.title}</h3>
-                        <p className="text-sm text-gray-500 mt-1">{job.location}</p>
-                      </div>
-                      <p className="text-gray-700 mb-4 line-clamp-3">{job.description}</p>
-                      
-                      <div className="flex items-center gap-4">
-                        <button
-                          onClick={() => navigate(`/job/edit/${job._id}`)}
-                          className="bg-blue-500 text-white px-5 py-2 rounded-md hover:bg-blue-600 text-sm font-semibold"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleJobDelete(job._id)}
-                          className="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 text-sm font-semibold"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+    {postedJobs.length === 0 ? (
+      <p className="text-gray-600">No posted jobs available.</p>
+    ) : (
+      <>
+      
+        <p className="text-sm text-gray-500 mb-4">
+          Showing {indexOfFirstJob + 1}–{Math.min(indexOfLastJob, postedJobs.length)} of {postedJobs.length} jobs
+        </p>
 
+        <div className="space-y-6">
+                <input
+          type="text"
+          placeholder="Search by job title or location..."
+          value={jobSearchQuery}
+          onChange={(e) => setJobSearchQuery(e.target.value)}
+          className="mb-4 w-full p-2 border border-blue-500 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+          />
 
-                  <Pagination
-                    pageCount={Math.ceil(postedJobs.length / jobsPerPage)}
-                    onPageChange={({ selected }) => setCurrentPage(selected)}
-                    currentPage={currentPage}
-                  />
-                  
-                </div>
-              )}
+          {currentJobs.map((job) => (
+            <div
+              key={job._id}
+              className="bg-white p-6 rounded-lg border-2 border-blue-400 shadow-md hover:shadow-lg transition-shadow"
+            >
+              <div className="mb-3">
+                <h3 className="text-xl font-bold text-blue-700">{job.title}</h3>
+                <p className="text-sm text-gray-500 mt-1">📍 {job.location}</p>
+              </div>
+
+            <ReadMore text={job.description} />
+
+              <div className="flex flex-wrap gap-4 mt-2">
+                <button
+                  onClick={() => navigate(`/job/edit/${job._id}`)}
+                  className="bg-blue-500 text-white px-5 py-1.5 rounded-md hover:bg-blue-600 text-sm font-semibold transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleJobDelete(job._id)}
+                  className="bg-red-500 text-white px-5 py-1.5 rounded-md hover:bg-red-600 text-sm font-semibold transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-          )}
+          ))}
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-8">
+          <Pagination
+            pageCount={Math.ceil(postedJobs.length / jobsPerPage)}
+            onPageChange={({ selected }) => setCurrentPage(selected)}
+            currentPage={currentPage}
+          />
+        </div>
+      </>
+    )}
+  </div>
+)}
+
           {activeTab === 'applications' && (
             <div>
               <h2 className="text-xl font-bold text-blue-600 mb-4">Job Applications</h2>
@@ -485,6 +513,13 @@ const EmployerDashboard = () => {
                   <p className="text-sm text-gray-500 mb-2">
                     Showing {indexOfFirstApplication + 1}–{Math.min(indexOfLastApplication, applications.length)} of {applications.length} applications
                   </p>
+                  <input
+  type="text"
+  placeholder="Search by job title or applicant name...."
+  value={applicationSearchQuery}
+  onChange={(e) => setApplicationSearchQuery(e.target.value)}
+  className="mb-4 w-full p-2 border border-blue-500 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+/>
 
                   <div className="space-y-4">
                     {currentApplications.map((app) => (
@@ -530,8 +565,8 @@ const EmployerDashboard = () => {
   onClick={() =>
     sendEmail(
       app?.applicant?.user?.email,
-      'Application Reviewed!!!!!',
-      'Your application has been reviewed. We will get back to you shortly.'
+      `Application Reviewed - ${app.job.title}`,
+      ` Hi ${app?.applicant?.user?.name}, \n\nYour application has been reviewed for the Role of ${app.job.title}. We will get back to you shortly. \n\nBest regards,\nRecruitment Team`
     )
   }
   className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm"
@@ -545,19 +580,46 @@ const EmployerDashboard = () => {
                             View Resume
                           </button>
 
-                          <button
-                            onClick={() => updateApplicationStatus(app._id, 'shortlisted')}
-                            className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
-                          >
-                            Shortlist
-                          </button>
+                          {app.status === 'shortlisted' ? (
+  <span className="bg-green-600 text-white px-3 py-1 rounded text-sm cursor-default">Shortlisted</span>
+) : (
 
                           <button
-                            onClick={() => updateApplicationStatus(app._id, 'rejected')}
-                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm"
-                          >
-                            Reject
-                          </button>
+                          onClick={() => {
+                            sendEmail(
+                              app?.applicant?.user?.email,
+                              `Application Reviewed - ${app.job.title}`,
+                              `Hi ${app?.applicant?.user?.name},\n\nThank you for your application for the position of ${app.job.title}. Congratulations! You've been shortlisted for this position. We will contact you soon with the next steps.\n\nBest regards,\nRecruitment Team`
+                            );
+                            
+                            updateApplicationStatus(app._id, 'shortlisted');
+                          }}
+                          className={`px-3 py-1 rounded text-sm text-white ${app.status === 'rejected' ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-800 hover:bg-green-600'}`}
+                          disabled={app.status !== 'pending'}
+                        >
+                         Shortlist
+                        </button>
+                          )}
+                          {app.status === 'rejected' ? (
+  <span className="bg-red-300 text-white px-3 py-1 rounded text-sm cursor-default">Rejected</span>
+) : (
+
+                          <button
+                          onClick={() => {
+                            sendEmail(
+                              app?.applicant?.user?.email,
+                              `Application Reviewed - ${app.job.title}`,
+                              `Hi ${app?.applicant?.user?.name},\n\nThank you for your application for the position of ${app.job.title}. Unfortunately at this time, we are unable to move forward with your application. We encourage you to stay connected with us for future opportunities.\n\nBest regards,\nRecruitment Team`
+                            );
+                            
+                            updateApplicationStatus(app._id, 'rejected');
+                          }}
+                          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm"
+                          disabled={app.status !== 'pending'}
+                        >
+                          Reject
+                        </button>
+                          )}
                         </div>
                       </div>
                     ))}

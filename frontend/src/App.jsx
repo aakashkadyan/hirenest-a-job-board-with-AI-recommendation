@@ -20,7 +20,6 @@ import { BrowserRouter as Router,Routes, Route } from "react-router";
 
 function App() {
   return (
-    
     <Router>
       <div>
         <Routes>
@@ -75,7 +74,6 @@ function App() {
     <Footer /> */}
     <ToastContainer position="top-right" autoClose={8000} />
     </Router>
-    
   )
 }
 
