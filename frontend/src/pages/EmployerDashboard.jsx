@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CitySelect from '../components/CitySelect';
 import JobTitleSelect from '../components/JobTitleSelect';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import ReadMore from '../components/ReadMore';
 import { toast } from 'react-toastify';
 import Pagination from '../components/Pagination';
@@ -20,8 +22,16 @@ const EmployerDashboard = () => {
   const [applicationsPage, setApplicationsPage] = useState(0);
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
   const jobsPerPage = 5;
+  
   const applicationsPerPage = 5;
   const [message, setMessage] = useState('');
+  const [filters, setFilters] = useState({
+    name: '',
+    location: '',
+    title: '',
+    status: '',
+  });
+  
 
   const indexOfFirstApplication = applicationsPage * applicationsPerPage;
   const indexOfLastApplication = indexOfFirstApplication + applicationsPerPage;
@@ -245,14 +255,63 @@ const EmployerDashboard = () => {
     try {
       const res = await fetch(`http://localhost:5002/api/jobseekers/${userId}`);
       const data = await res.json();
-      if (res.ok) {
-        setSelectedJobSeeker(data.jobSeeker);
-      } else {
+  
+      if (!res.ok) {
         toast.error('Failed to fetch jobseeker profile');
+        return;
       }
+  
+      const seeker = data;
+      const educationDetails = [];
+      const experienceDetails = [];
+
+      seeker.education.forEach((edu, index) => {
+        educationDetails.push(`Degree : ${edu.degree}, \nInstitution : ${edu.institution}, \nField of Study : ${edu.fieldOfStudy}, \nStart Year : ${edu.startYear}, \nEnd Year : ${edu.endYear}`);
+        
+      });
+      seeker.experience.forEach((exp, index) => {
+        const startDate = new Date(exp.startDate).toLocaleDateString('en-GB');
+        const endDate = exp.endDate ? new Date(exp.endDate).toLocaleDateString('en-GB') : 'Present';
+
+        experienceDetails.push(`Company : ${exp.company}, \nPosition : ${exp.role}, \nStart Date : ${startDate}, \nEnd Date : ${endDate}, \nDescription : ${exp.description}`);
+      });
+      //console.log('Job Seeker Data:', data);
+      //console.log('Education Details:', educationDetails);
+  
+      const doc = new jsPDF();
+  
+      // Title
+      doc.setFontSize(16);
+      doc.text('Resume', 105, 20, null, null, 'center');
+  
+      // Basic Info
+      doc.setFontSize(14);
+      doc.text(`Name: ${seeker.user.name}`, 20, 40);
+      doc.text(`Email: ${seeker.user.email}`, 20, 50);
+      doc.text(`Location: ${seeker.user.location}`, 20, 60);
+      doc.text(`Phone: ${seeker.phone || 'N/A'}`, 20, 70);
+  
+      // Optional: Table for structured info
+      autoTable(doc, {
+        startY: 80,
+        head: [['Field', 'Details']],
+        body: [
+          ['Experience Details', experienceDetails || 'N/A'],
+          ['Education Details', educationDetails || 'N/A'],
+          ['Bio', seeker.bio || 'N/A'],
+          ['Skills', seeker.skills?.join(', ') || 'N/A'],   
+          ['Preferred Job Type', seeker.jobPreferences.preferredJobType|| 'N/A'],
+          ['Preferred Location', seeker.jobPreferences.preferredLocation || 'N/A'],          
+        ],
+      });
+  
+      // Create blob and open in new tab
+      const pdfBlob = doc.output('blob');
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      window.open(blobUrl, '_blank');
     } catch (err) {
       console.error(err);
-      toast.error('An error occurred');
+      toast.error('Error generating resume');
     }
   };
   
@@ -319,6 +378,8 @@ const EmployerDashboard = () => {
           </nav>
         </aside>
 
+
+
         <section className="col-span-9 bg-white p-6 rounded shadow">
                 {activeTab === 'post-jobs' && (
           <div>
@@ -330,6 +391,7 @@ const EmployerDashboard = () => {
                 </div>
               )}
             </div>
+            
             <form onSubmit={handleJobSubmit} className="space-y-4 p-4 border border-blue-400 bg-blue-50 rounded-lg">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Job Title</label>
@@ -521,6 +583,7 @@ const EmployerDashboard = () => {
   className="mb-4 w-full p-2 border border-blue-500 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
 />
 
+
                   <div className="space-y-4">
                     {currentApplications.map((app) => (
                       <div
@@ -561,18 +624,26 @@ const EmployerDashboard = () => {
                         )}
 
                         <div className="mt-3 flex flex-wrap gap-2">
-                        <button
-  onClick={() =>
-    sendEmail(
-      app?.applicant?.user?.email,
-      `Application Reviewed - ${app.job.title}`,
-      ` Hi ${app?.applicant?.user?.name}, \n\nYour application has been reviewed for the Role of ${app.job.title}. We will get back to you shortly. \n\nBest regards,\nRecruitment Team`
-    )
-  }
-  className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm"
->
-  Mark as Reviewed
-</button>
+                        {app.status === 'reviewed' ? (
+                          <span className="bg-yellow-700 text-white px-3 py-1 rounded text-sm cursor-default">Reviewed</span>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              sendEmail(
+                                app?.applicant?.user?.email,
+                                `Application Status - ${app.job.title}`,
+                                `Hi ${app?.applicant?.user?.name},\n\nYour application has been reviewed for the position of ${app.job.title}. We will get back to you shortly.\n\nBest regards,\nRecruitment Team`
+                              );
+
+                              updateApplicationStatus(app._id, 'reviewed');
+                            }}
+                            className={`px-3 py-1 rounded text-sm text-white ${app.status === 'rejected' ? 'bg-gray-400 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600'}`}
+                            disabled={app.status !== 'pending'}
+                          >
+                            Mark as Reviewed
+                          </button>
+                        )}
+
                           <button
                             onClick={() => handleViewResume(app.applicant.user._id)}
                             className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
@@ -588,7 +659,7 @@ const EmployerDashboard = () => {
                           onClick={() => {
                             sendEmail(
                               app?.applicant?.user?.email,
-                              `Application Reviewed - ${app.job.title}`,
+                              `Application Status - ${app.job.title}`,
                               `Hi ${app?.applicant?.user?.name},\n\nThank you for your application for the position of ${app.job.title}. Congratulations! You've been shortlisted for this position. We will contact you soon with the next steps.\n\nBest regards,\nRecruitment Team`
                             );
                             
@@ -608,7 +679,7 @@ const EmployerDashboard = () => {
                           onClick={() => {
                             sendEmail(
                               app?.applicant?.user?.email,
-                              `Application Reviewed - ${app.job.title}`,
+                              `Application Status - ${app.job.title}`,
                               `Hi ${app?.applicant?.user?.name},\n\nThank you for your application for the position of ${app.job.title}. Unfortunately at this time, we are unable to move forward with your application. We encourage you to stay connected with us for future opportunities.\n\nBest regards,\nRecruitment Team`
                             );
                             
