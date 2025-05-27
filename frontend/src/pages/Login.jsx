@@ -61,7 +61,7 @@ const Login = () => {
         <Header />
                 <div class="flex justify-center items-center min-h-screen bg-gray-100">
         <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-            <h2 class="text-2xl font-bold text-center text-blue-600 mb-6">Login to Job Board</h2>
+            <h2 class="text-2xl font-bold text-center text-blue-600 mb-6">Login to HireNest</h2>
             <form onSubmit={handleSubmit}>
             <div class="mb-4">
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>

@@ -69,9 +69,6 @@ function App() {
         
       </div>
 
-    {/* <Header/>
-      <Home />
-    <Footer /> */}
     <ToastContainer position="top-right" autoClose={8000} />
     </Router>
   )

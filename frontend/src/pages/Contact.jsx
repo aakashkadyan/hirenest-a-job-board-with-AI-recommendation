@@ -110,7 +110,7 @@ const Contact = () => {
             {/* Contact Info */}
             <div className="bg-white p-6 rounded-lg shadow">
               <h2 className="text-2xl font-semibold mb-4">Contact Info</h2>
-              <p className="text-gray-700 mb-2">📍 123 Job Street, Tech City, India</p>
+              <p className="text-gray-700 mb-2">📍 NIT-Faridabad, Haryana, India</p>
               <p className="text-gray-700 mb-2">📞 +91 9898989898</p>
               <p className="text-gray-700 mb-2">✉️ support@hirenest.com</p>
               <p className="text-gray-600 mt-4">

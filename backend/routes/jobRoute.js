@@ -54,6 +54,7 @@ jobRoute.get('/', async (req, res) => {
   }
 });
 
+
 jobRoute.get('/:id', async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);

@@ -4,7 +4,7 @@ const employerProfile= new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // refers to User collection
+      ref: 'User', 
       required: true,
     },
     companyName: {

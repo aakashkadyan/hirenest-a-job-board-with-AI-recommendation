@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CitySelect from '../components/CitySelect';
 import JobTitleSelect from '../components/JobTitleSelect';
+import AutoSuggestInput from '../components/AutoSuggestInput';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import ReadMore from '../components/ReadMore';
@@ -26,24 +27,58 @@ const EmployerDashboard = () => {
   const applicationsPerPage = 5;
   const [message, setMessage] = useState('');
   const [filters, setFilters] = useState({
-    name: '',
+    jobTitle: '',
+    applicant: '',
     location: '',
-    title: '',
     status: '',
   });
-  
+  const handleFilter = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    // Reset to first page when filters change
+    setApplicationsPage(0);
+  };
 
+  const filteredApplications = applications.filter((app) => {
+    // Applicant name can be in app.applicant.user.name or app.applicant.name
+    const applicantName =
+      app.applicant?.user?.name ||
+      app.applicant?.name ||
+      '';
+  
+    const jobTitle = app.job?.title || '';
+    const jobLocation = app.job?.location || '';
+    const status = app.status || 'pending'; // Default to pending if no status
+  
+    const matchesJobTitle =
+      !filters.jobTitle ||
+      jobTitle.toLowerCase().includes(filters.jobTitle.toLowerCase());
+  
+    const matchesApplicant =
+      !filters.applicant ||
+      applicantName.toLowerCase().includes(filters.applicant.toLowerCase());
+  
+    const matchesLocation =
+      !filters.location ||
+      jobLocation.toLowerCase().includes(filters.location.toLowerCase());
+  
+    const matchesStatus =
+      !filters.status || status === filters.status;
+  
+    return (
+      matchesJobTitle &&
+      matchesApplicant &&
+      matchesLocation &&
+      matchesStatus
+    );
+  });  
+  useEffect(() => {
+    setApplicationsPage(0);
+  }, [filters]);
+  
   const indexOfFirstApplication = applicationsPage * applicationsPerPage;
   const indexOfLastApplication = indexOfFirstApplication + applicationsPerPage;
-  const filteredApplications = applications.filter((app) =>
-    app.job?.title?.toLowerCase().includes(applicationSearchQuery.toLowerCase()) ||
-    app.job?.location?.toLowerCase().includes(applicationSearchQuery.toLowerCase()) ||
-    app.applicant?.name?.toLowerCase().includes(applicationSearchQuery.toLowerCase()) ||
-    app.applicant?.location?.toLowerCase().includes(applicationSearchQuery.toLowerCase())
-  );
-  
   const currentApplications = filteredApplications.slice(indexOfFirstApplication, indexOfLastApplication);
-  
+
   const [jobForm, setJobForm] = useState({
     title: '',
     description: '',
@@ -73,6 +108,8 @@ const EmployerDashboard = () => {
       title: selectedOption ? selectedOption.value : '',
     }));
   };
+
+  
 
   useEffect(() => {
     const userId = localStorage.getItem('userId');
@@ -251,6 +288,8 @@ const EmployerDashboard = () => {
     }
   };
   
+  
+
   const handleViewResume = async (userId) => {
     try {
       const res = await fetch(`http://localhost:5002/api/jobseekers/${userId}`);
@@ -513,13 +552,15 @@ const EmployerDashboard = () => {
         </p>
 
         <div className="space-y-6">
-                <input
+                {/* <input
           type="text"
           placeholder="Search by job title or location..."
           value={jobSearchQuery}
           onChange={(e) => setJobSearchQuery(e.target.value)}
           className="mb-4 w-full p-2 border border-blue-500 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-          />
+          /> */}
+
+          
 
           {currentJobs.map((job) => (
             <div
@@ -564,148 +605,187 @@ const EmployerDashboard = () => {
   </div>
 )}
 
-          {activeTab === 'applications' && (
-            <div>
-              <h2 className="text-xl font-bold text-blue-600 mb-4">Job Applications</h2>
+{activeTab === 'applications' && (
+  <div>
+    <h2 className="text-xl font-bold text-blue-600 mb-4">Job Applications</h2>
 
-              {applications.length === 0 ? (
-                <p>No applications found.</p>
-              ) : (
-                <div>
-                  <p className="text-sm text-gray-500 mb-2">
-                    Showing {indexOfFirstApplication + 1}–{Math.min(indexOfLastApplication, applications.length)} of {applications.length} applications
-                  </p>
-                  <input
-  type="text"
-  placeholder="Search by job title or applicant name...."
-  value={applicationSearchQuery}
-  onChange={(e) => setApplicationSearchQuery(e.target.value)}
-  className="mb-4 w-full p-2 border border-blue-500 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-/>
+    {applications.length === 0 ? (
+      <p>No applications found.</p>
+    ) : (
+      <div>
+        <p className="text-sm text-gray-500 mb-2">
+          Showing {indexOfFirstApplication + 1}–{Math.min(indexOfLastApplication, filteredApplications.length)} of {filteredApplications.length} applications
+        </p>
+        
+        <div className="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0 mb-4">
+          <AutoSuggestInput
+            placeholder="Filter by Job Title"
+            fetchUrl={`http://localhost:5002/api/applications/suggestions/jobs?employerId=${localStorage.getItem('userId')}`}
+            onSelect={(val) => handleFilter('jobTitle', val)}
+            value={filters.jobTitle}
+          />
+          <AutoSuggestInput
+            placeholder="Filter by Applicant"
+            fetchUrl={`http://localhost:5002/api/applications/suggestions/applicants?employerId=${localStorage.getItem('userId')}`}
+            onSelect={(val) => handleFilter('applicant', val)}
+            value={filters.applicant}
+          />
+          <AutoSuggestInput
+            placeholder="Filter by Location"
+            fetchUrl={`http://localhost:5002/api/applications/suggestions/locations?employerId=${localStorage.getItem('userId')}`}
+            onSelect={(val) => handleFilter('location', val)}
+            value={filters.location}
+          />
+          <select 
+            className="border border-gray-300 rounded-md p-2 w-48"
+            value={filters.status}
+            onChange={(e) => handleFilter('status', e.target.value)}
+          >
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="shortlisted">Shortlisted</option>
+            <option value="reviewed">Reviewed</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <button
+            onClick={() => setFilters({ jobTitle: '', applicant: '', location: '', status: '' })}
+            className="bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600 text-sm"
+          >
+            Clear Filters
+          </button>
+        </div>
 
+        <div className="space-y-4">
+          {currentApplications.map((app) => (
+            <div
+              key={app._id}
+              className="bg-white p-4 rounded-lg border border-gray-300 shadow"
+            >
+              <h3 className="text-lg font-semibold text-blue-700">
+                Applicant: {app?.applicant?.user?.name}
+              </h3>
+              <p className="text-sm text-gray-600">
+                Email: {app?.applicant?.user?.email}
+              </p>
 
-                  <div className="space-y-4">
-                    {currentApplications.map((app) => (
-                      <div
-                        key={app._id}
-                        className="bg-white p-4 rounded-lg border border-gray-300 shadow"
-                      >
-                        <h3 className="text-lg font-semibold text-blue-700">
-                          Applicant: {app?.applicant?.user?.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          Email: {app?.applicant?.user?.email}
-                        </p>
+              {app?.resume?.url && (
+                <a
+                  href={app.resume.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline text-sm"
+                >
+                  View Resume
+                </a>
+              )}
 
-                        {app?.resume?.url && (
-                          <a
-                            href={app.resume.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-500 underline text-sm"
-                          >
-                            View Resume
-                          </a>
-                        )}
-
-                        {app.coverLetter && (
-                          <div className="mt-2">
-                            <p className="text-sm text-gray-700"><strong>Cover Letter:</strong></p>
-                            <p className="text-sm text-gray-600 bg-gray-100 p-2 rounded">{app.coverLetter}</p>
-                          </div>
-                        )}
-
-                        {app.job && (
-                          <div className="mt-2">
-                            <p className="text-sm text-gray-700"><strong>Job Title:</strong> {app.job.title}</p>
-                            <p className="text-sm text-gray-600"><strong>Description:</strong> {app.job.description.slice(0, 100)}</p>
-                            <p className="text-sm text-gray-600"><strong>Location:</strong> {app.job.location}</p>
-                          </div>
-                        )}
-
-                        <div className="mt-3 flex flex-wrap gap-2">
-                        {app.status === 'reviewed' ? (
-                          <span className="bg-yellow-700 text-white px-3 py-1 rounded text-sm cursor-default">Reviewed</span>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              sendEmail(
-                                app?.applicant?.user?.email,
-                                `Application Status - ${app.job.title}`,
-                                `Hi ${app?.applicant?.user?.name},\n\nYour application has been reviewed for the position of ${app.job.title}. We will get back to you shortly.\n\nBest regards,\nRecruitment Team`
-                              );
-
-                              updateApplicationStatus(app._id, 'reviewed');
-                            }}
-                            className={`px-3 py-1 rounded text-sm text-white ${app.status === 'rejected' ? 'bg-gray-400 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600'}`}
-                            disabled={app.status !== 'pending'}
-                          >
-                            Mark as Reviewed
-                          </button>
-                        )}
-
-                          <button
-                            onClick={() => handleViewResume(app.applicant.user._id)}
-                            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
-                          >
-                            View Resume
-                          </button>
-
-                          {app.status === 'shortlisted' ? (
-  <span className="bg-green-600 text-white px-3 py-1 rounded text-sm cursor-default">Shortlisted</span>
-) : (
-
-                          <button
-                          onClick={() => {
-                            sendEmail(
-                              app?.applicant?.user?.email,
-                              `Application Status - ${app.job.title}`,
-                              `Hi ${app?.applicant?.user?.name},\n\nThank you for your application for the position of ${app.job.title}. Congratulations! You've been shortlisted for this position. We will contact you soon with the next steps.\n\nBest regards,\nRecruitment Team`
-                            );
-                            
-                            updateApplicationStatus(app._id, 'shortlisted');
-                          }}
-                          className={`px-3 py-1 rounded text-sm text-white ${app.status === 'rejected' ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-800 hover:bg-green-600'}`}
-                          disabled={app.status !== 'pending'}
-                        >
-                         Shortlist
-                        </button>
-                          )}
-                          {app.status === 'rejected' ? (
-  <span className="bg-red-300 text-white px-3 py-1 rounded text-sm cursor-default">Rejected</span>
-) : (
-
-                          <button
-                          onClick={() => {
-                            sendEmail(
-                              app?.applicant?.user?.email,
-                              `Application Status - ${app.job.title}`,
-                              `Hi ${app?.applicant?.user?.name},\n\nThank you for your application for the position of ${app.job.title}. Unfortunately at this time, we are unable to move forward with your application. We encourage you to stay connected with us for future opportunities.\n\nBest regards,\nRecruitment Team`
-                            );
-                            
-                            updateApplicationStatus(app._id, 'rejected');
-                          }}
-                          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm"
-                          disabled={app.status !== 'pending'}
-                        >
-                          Reject
-                        </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <Pagination
-                    pageCount={Math.ceil(applications.length / applicationsPerPage)}
-                    onPageChange={({ selected }) => setApplicationsPage(selected)}
-                    currentPage={applicationsPage}
-                  />
+              {app.coverLetter && (
+                <div className="mt-2">
+                  <p className="text-sm text-gray-700"><strong>Cover Letter:</strong></p>
+                  <p className="text-sm text-gray-600 bg-gray-100 p-2 rounded">{app.coverLetter}</p>
                 </div>
               )}
-            </div>
-          )}
 
+              {app.job && (
+                <div className="mt-2">
+                  <p className="text-sm text-gray-700"><strong>Job Title:</strong> {app.job.title}</p>
+                  <p className="text-sm text-gray-600"><strong>Description:</strong> {app.job.description.slice(0, 100)}</p>
+                  <p className="text-sm text-gray-600"><strong>Location:</strong> {app.job.location}</p>
+                </div>
+              )}
+
+              <div className="mt-2">
+                <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                  app.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  app.status === 'reviewed' ? 'bg-blue-100 text-blue-800' :
+                  app.status === 'shortlisted' ? 'bg-green-100 text-green-800' :
+                  app.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  Status: {app.status || 'pending'}
+                </span>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                {app.status === 'reviewed' ? (
+                  <span className="bg-yellow-700 text-white px-3 py-1 rounded text-sm cursor-default">Reviewed</span>
+                ) : (
+                  <button
+                    onClick={() => {
+                      sendEmail(
+                        app?.applicant?.user?.email,
+                        `Application Status - ${app.job.title}`,
+                        `Hi ${app?.applicant?.user?.name},\n\nYour application has been reviewed for the position of ${app.job.title}. We will get back to you shortly.\n\nBest regards,\nRecruitment Team`
+                      );
+                      updateApplicationStatus(app._id, 'reviewed');
+                    }}
+                    className={`px-3 py-1 rounded text-sm text-white ${app.status === 'rejected' ? 'bg-gray-400 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600'}`}
+                    disabled={app.status !== 'pending'}
+                  >
+                    Mark as Reviewed
+                  </button>
+                )}
+
+                <button
+                  onClick={() => handleViewResume(app.applicant.user._id)}
+                  className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
+                >
+                  View Resume
+                </button>
+
+                {app.status === 'shortlisted' ? (
+                  <span className="bg-green-600 text-white px-3 py-1 rounded text-sm cursor-default">Shortlisted</span>
+                ) : (
+                  <button
+                    onClick={() => {
+                      sendEmail(
+                        app?.applicant?.user?.email,
+                        `Application Status - ${app.job.title}`,
+                        `Hi ${app?.applicant?.user?.name},\n\nThank you for your application for the position of ${app.job.title}. Congratulations! You've been shortlisted for this position. We will contact you soon with the next steps.\n\nBest regards,\nRecruitment Team`
+                      );
+                      updateApplicationStatus(app._id, 'shortlisted');
+                    }}
+                    className={`px-3 py-1 rounded text-sm text-white ${app.status === 'rejected' ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-800 hover:bg-green-600'}`}
+                    disabled={app.status !== 'pending'}
+                  >
+                    Shortlist
+                  </button>
+                )}
+
+                {app.status === 'rejected' ? (
+                  <span className="bg-red-300 text-white px-3 py-1 rounded text-sm cursor-default">Rejected</span>
+                ) : (
+                  <button
+                    onClick={() => {
+                      sendEmail(
+                        app?.applicant?.user?.email,
+                        `Application Status - ${app.job.title}`,
+                        `Hi ${app?.applicant?.user?.name},\n\nThank you for your application for the position of ${app.job.title}. Unfortunately at this time, we are unable to move forward with your application. We encourage you to stay connected with us for future opportunities.\n\nBest regards,\nRecruitment Team`
+                      );
+                      updateApplicationStatus(app._id, 'rejected');
+                    }}
+                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm"
+                    disabled={app.status !== 'pending'}
+                  >
+                    Reject
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6">
+          <Pagination
+            pageCount={Math.ceil(filteredApplications.length / applicationsPerPage)}
+            onPageChange={({ selected }) => setApplicationsPage(selected)}
+            currentPage={applicationsPage}
+          />
+        </div>
+      </div>
+    )}
+  </div>
+)}
 
         </section>
       </main>

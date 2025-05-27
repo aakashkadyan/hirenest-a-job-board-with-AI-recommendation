@@ -13,6 +13,9 @@ const JobSeekerDashboard = () => {
   const [jobs, setJobs] = useState([]);
   const [itemOffset, setItemOffset] = useState(0);
   const [limit] = useState(5);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [jobsPerPage] = useState(5);  
+
   const [totalJobs, setTotalJobs] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [location, setLocation] = useState('');
@@ -90,7 +93,7 @@ const JobSeekerDashboard = () => {
           return;
         }
   
-        const jobSeekerId = resumeData._id; // ✅ This is the correct applicant ID
+        const jobSeekerId = resumeData._id; //
   
         // Submit application
         const response = await fetch('http://localhost:5002/api/applications', {
@@ -117,8 +120,7 @@ const JobSeekerDashboard = () => {
       }
     }
   };
-  
-  
+    
   const handleRemoveApplication = async (jobId) => {
     try {
       const res = await fetch(`http://localhost:5002/api/applications/${jobId}`, {
@@ -312,7 +314,12 @@ const JobSeekerDashboard = () => {
               <h2 className="text-xl font-bold mb-4">Your Applications</h2>
 
               <div className="space-y-6">
-                {appliedJobs.length > 0 ? appliedJobs.map((job) => (
+                {appliedJobs.length > 0 ?(
+          <>
+          {appliedJobs
+            .slice(currentPage * jobsPerPage, currentPage * jobsPerPage + jobsPerPage)
+            .map((job) => (
+              
                   <div
                     key={job._id}
                     className="bg-white p-6 rounded-lg border-2 border-blue-400 shadow-md hover:shadow-lg transition-shadow"
@@ -327,17 +334,31 @@ const JobSeekerDashboard = () => {
                     </div>
 
                     <div className="flex justify-between items-center">
-                  {/* <button
-                    onClick={() => handleRemoveApplication(job._id)}
-                    className="bg-red-500 text-white px-3 py-1 text-sm rounded hover:bg-red-600"
-                  >
-                    Remove
-                  </button> */}
 
                   <span className="text-sm text-gray-500">Status: {job.status}</span>
                 </div>
                 </div>
-                )) : <p>You have not applied to any jobs yet.</p>}
+                
+                ))}
+                <div className="mt-6">
+            <ReactPaginate
+              breakLabel="..."
+              nextLabel="Next >"
+              onPageChange={({ selected }) => setCurrentPage(selected)}
+              pageRangeDisplayed={5}
+              pageCount={Math.ceil(appliedJobs.length / jobsPerPage)}
+              previousLabel="< Prev"
+              containerClassName="flex justify-center space-x-2 mt-4"
+              pageClassName="px-3 py-1 border rounded hover:bg-gray-200"
+              activeClassName="bg-blue-500 text-white"
+              previousClassName="px-3 py-1 border rounded hover:bg-gray-200"
+              nextClassName="px-3 py-1 border rounded hover:bg-gray-200"
+              disabledClassName="opacity-50 cursor-not-allowed"
+            />
+          </div>
+        </>
+                
+                ) :( <p>You have not applied to any jobs yet.</p>)}
               </div>
             </div>
           )}
@@ -368,15 +389,23 @@ const JobSeekerDashboard = () => {
                       <span>📍 {job.location}</span>
                       <span>💰 {job.salaryRange ? `${job.salaryRange.currency} ${job.salaryRange.min} - ${job.salaryRange.max}` : 'Not specified'}</span>
                     </div>
+<div className="flex gap-3 mt-4">
+                    <button
+              className="bg-blue-500 text-white px-3 py-1.5 mt-5 rounded-md hover:bg-blue-700 text-sm font-semibold"
+              onClick={() => handleApply(job)}
+                  >
+                    Apply
+                  </button>
 
                     {/* Unsave button */}
-                    <div className="flex gap-4">
+                 
                       <button
                         className="bg-yellow-500 text-white px-2 py-1.5 mt-5 rounded-md hover:bg-red-600 text-sm font-semibold"
                         onClick={() => handleUnsaveJob(job)}
                       >
                         Remove
                       </button>
+                     
                     </div>
                   </div>
                 )) : <p>No saved jobs yet.</p>}
