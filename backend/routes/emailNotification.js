@@ -16,7 +16,7 @@ emailNotification.post('/', async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: process.env.MAIL_USER,
+      from: `HireNest <${process.env.MAIL_USER}>`,
       to,
       subject,
       text

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from "react-router";
 import Header from '../components/Header'
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import Footer from '../components/Footer'
 
@@ -47,13 +48,13 @@ const Login = () => {
       } else if (data.user.role === 'jobseeker') {
         navigate('/jobseekerdashboard');
       } else {
-        alert('Unknown role');
+        toast.error('Unknown role');
       }} else {
-            alert('Error: ' + data.error);
+            toast.error('Error: ' + data.error);
           }
         } catch (err) {
           console.error(err);
-          alert('An error occurred during login');
+          toast.error('An error occurred during login');
         }
       };
   return (
