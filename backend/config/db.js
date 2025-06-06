@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const connectWithRetry = async (retries = 5, delay = 5002) => {
   for (let i = 0; i < retries; i++) {
     try {
-      const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/job_board', {
+      const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb+srv://aakashkadiyan93:YUZRcmMYVsNSuKtk@hirenest-vercel.cwvxrsq.mongodb.net/hirenest_job_board?retryWrites=true&w=majority&appName=hirenest-vercel', {
         useNewUrlParser: true,
         useUnifiedTopology: true,
         serverSelectionTimeoutMS: 5000,
@@ -41,7 +41,7 @@ const connectWithRetry = async (retries = 5, delay = 5002) => {
       if (i === retries - 1) {
         // Last retry attempt failed
         console.error('All connection attempts failed. Please check if MongoDB is running.');
-        console.error('Connection string:', process.env.MONGO_URI || 'mongodb://localhost:27017/job_board');
+        console.error('Connection string:', process.env.MONGO_URI || 'mongodb+srv://aakashkadiyan93:YUZRcmMYVsNSuKtk@hirenest-vercel.cwvxrsq.mongodb.net/hirenest_job_board?retryWrites=true&w=majority&appName=hirenest-vercel');
         throw error;
       }
       
