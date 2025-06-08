@@ -5,13 +5,15 @@ const User = require('../models/User');
 const loginRouter = express.Router();
 const bcrypt = require('bcryptjs');
 const redis = require('redis');
+dotenv = require('dotenv');
+dotenv.config();
 
 // Redis client setup
 const redisClient = redis.createClient();
 redisClient.connect().catch(console.error);
 
-// JWT Secret Key (should be in environment variables in production)
-const JWT_SECRET = 'aakash@#$%kadiyan@#*&';
+
+const JWT_SECRET = process.env.JWT_SECRET_KEY;
 
 // GET route to serve the login form
 loginRouter.get('/login', (req, res) => {

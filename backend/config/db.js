@@ -1,16 +1,18 @@
 const mongoose = require("mongoose");
-
+require('dotenv').config();
+console.log("Connecting to MongoDB...", process.env.MONGO_URI);
 const connectWithRetry = async (retries = 5, delay = 5002) => {
   for (let i = 0; i < retries; i++) {
     try {
-      const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb+srv://aakashkadiyan93:YUZRcmMYVsNSuKtk@hirenest-vercel.cwvxrsq.mongodb.net/hirenest_job_board?retryWrites=true&w=majority&appName=hirenest-vercel', {
+      const conn = await mongoose.connect(process.env.MONGO_URI, {
+        
         useNewUrlParser: true,
         useUnifiedTopology: true,
         serverSelectionTimeoutMS: 5000,
         family: 4 // Use IPv4, skip trying IPv6
       });
 
-      console.log(`MongoDB Connected: ${conn.connection.host}`);
+      console.log(`MongoDB Connected at Host : ${conn.connection.host}/${conn.connection.name}`);
       
       // Create indexes for unique fields
       const User = require('../models/User');
@@ -32,7 +34,6 @@ const connectWithRetry = async (retries = 5, delay = 5002) => {
         console.log('MongoDB reconnected');
       });
 
-      // Connection successful, exit the retry loop
       return conn;
 
     } catch (error) {
@@ -41,7 +42,7 @@ const connectWithRetry = async (retries = 5, delay = 5002) => {
       if (i === retries - 1) {
         // Last retry attempt failed
         console.error('All connection attempts failed. Please check if MongoDB is running.');
-        console.error('Connection string:', process.env.MONGO_URI || 'mongodb+srv://aakashkadiyan93:YUZRcmMYVsNSuKtk@hirenest-vercel.cwvxrsq.mongodb.net/hirenest_job_board?retryWrites=true&w=majority&appName=hirenest-vercel');
+        console.error('Connection string:', process.env.MONGO_URI);
         throw error;
       }
       
