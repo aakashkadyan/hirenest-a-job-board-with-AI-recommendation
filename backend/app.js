@@ -15,13 +15,11 @@ const JobSeekerRoute = require("./routes/jobSeekerRoute")
 const emailNotification = require("./routes/emailNotification");
 dotenv.config();
 
-
-
 // Initialize app
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173', 'https://hirenest-a-job-board-with-ai-recomm.vercel.app/'],
   credentials: true
 }));
 
@@ -29,12 +27,13 @@ app.use(cors({
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.static('static'));
+
 // Connect to database and start server only after successful connection
 const startServer = async () => {
   try {
     // Connect to MongoDB
     await connectDB();
-
+    
     app.use('/api/jobs', jobRoute);
     app.use('/api/applications', applicationRoute);
     app.use('/api/employerprofile', employerprofileRoute);

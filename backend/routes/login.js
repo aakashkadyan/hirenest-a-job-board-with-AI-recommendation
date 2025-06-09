@@ -4,14 +4,11 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const loginRouter = express.Router();
 const bcrypt = require('bcryptjs');
-const redis = require('redis');
 dotenv = require('dotenv');
 dotenv.config();
 
-// Redis client setup
-const redisClient = redis.createClient();
-redisClient.connect().catch(console.error);
-
+// Skip Redis completely - we'll implement token blacklisting without Redis
+console.log('Running without Redis - token blacklisting will not be available');
 
 const JWT_SECRET = process.env.JWT_SECRET_KEY;
 
@@ -62,23 +59,21 @@ loginRouter.post('/login', async (req, res) => {
     }
 });
 
-// Logout route to blacklist JWT token
+// Logout route - without Redis blacklisting
 loginRouter.post('/logout', async (req, res) => {
     const token = req.headers['authorization']?.split(' ')[1];
     if (!token) return res.status(400).json({ message: 'No token provided' });
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const timeToExpire = decoded.exp - Math.floor(Date.now() / 1000);
-        await redisClient.setEx(`bl_${token}`, timeToExpire, 'blacklisted');
-
+        jwt.verify(token, JWT_SECRET); // Just verify the token is valid
+        console.log('Token verified, but blacklisting is not available without Redis');
         return res.status(200).json({ message: 'Logged out successfully' });
     } catch (error) {
         return res.status(400).json({ message: 'Invalid token' });
     }
 });
 
-// Middleware to verify JWT token with blacklist check
+// Middleware to verify JWT token - without blacklist check
 const verifyToken = async (req, res, next) => {
     const token = req.headers['authorization']?.split(' ')[1];
     if (!token) {
@@ -86,9 +81,6 @@ const verifyToken = async (req, res, next) => {
     }
 
     try {
-        const isBlacklisted = await redisClient.get(`bl_${token}`);
-        if (isBlacklisted) return res.status(401).json({ error: 'Token has been blacklisted' });
-
         const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded;
         next();

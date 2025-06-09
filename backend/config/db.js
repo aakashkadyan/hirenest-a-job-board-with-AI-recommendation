@@ -1,72 +1,62 @@
 const mongoose = require("mongoose");
 require('dotenv').config();
-console.log("Connecting to MongoDB...", process.env.MONGO_URI);
-const connectWithRetry = async (retries = 5, delay = 5002) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const conn = await mongoose.connect(process.env.MONGO_URI, {
-        
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 5000,
-        family: 4 // Use IPv4, skip trying IPv6
-      });
 
-      console.log(`MongoDB Connected at Host : ${conn.connection.host}/${conn.connection.name}`);
-      
-      // Create indexes for unique fields
-      const User = require('../models/User');
-      await User.createIndexes();
+console.log("Connecting to MongoDB.....", process.env.MONGO_URI);
 
-      // Handle connection events
-      mongoose.connection.on('error', err => {
-        console.error('MongoDB connection error:', err);
-        // Try to reconnect
-        setTimeout(() => connectWithRetry(1), delay);
-      });
+// Handle initial connection errors better
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB connection error:', err);
+  // Don't exit process here, let the main connection handler decide
+});
 
-      mongoose.connection.on('disconnected', () => {
-        console.log('MongoDB disconnected. Attempting to reconnect...');
-        setTimeout(() => connectWithRetry(1), delay);
-      });
-
-      mongoose.connection.on('reconnected', () => {
-        console.log('MongoDB reconnected');
-      });
-
-      return conn;
-
-    } catch (error) {
-      console.error(`MongoDB connection attempt ${i + 1} failed:`, error.message);
-      
-      if (i === retries - 1) {
-        // Last retry attempt failed
-        console.error('All connection attempts failed. Please check if MongoDB is running.');
-        console.error('Connection string:', process.env.MONGO_URI);
-        throw error;
-      }
-      
-      // Wait before trying again
-      console.log(`Retrying in ${delay/1000} seconds...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-};
+mongoose.connection.once('open', () => {
+  console.log('MongoDB connection established successfully');
+});
 
 const connectDB = async () => {
   try {
-    await connectWithRetry();
+    // Use mongoose for the main connection with more robust options
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 10000, // Increased timeout for server selection
+      socketTimeoutMS: 45000,          // Increased socket timeout
+      connectTimeoutMS: 30000,         // Connection timeout
+      family: 4,                       // Force IPv4
+      maxPoolSize: 10,                 // Connection pool size
+      minPoolSize: 5,                  // Minimum connections maintained
+      retryWrites: true,               // Retry write operations if they fail
+      heartbeatFrequencyMS: 5000,      // Check connection health more frequently
+    });
+    
+    console.log(`MongoDB Connected to: ${conn.connection.host}, Database: ${conn.connection.name}`);
+    return conn;
   } catch (error) {
-    console.error('Failed to connect to MongoDB:', error);
-    throw error; // Re-throw to be handled by the server startup
+    console.error('Failed to connect to MongoDB:', error.message);
+    
+    // Provide more helpful error messages based on common error types
+    if (error.name === 'MongooseServerSelectionError') {
+      if (error.message.includes('IP that isn\'t whitelisted')) {
+        console.error('\n⚠️ IP WHITELIST ERROR: Your current IP address is not whitelisted in MongoDB Atlas.');
+        console.error('Please add your IP address in MongoDB Atlas > Network Access > Add IP Address');
+        console.error('URL: https://cloud.mongodb.com/v2/account > Security > Network Access\n');
+      } else if (error.message.includes('timed out')) {
+        console.error('\n⚠️ CONNECTION TIMEOUT: Could not reach MongoDB Atlas servers. Check your internet connection.');
+      }
+    } else if (error.name === 'MongoNetworkError') {
+      console.error('\n⚠️ NETWORK ERROR: Could not connect to MongoDB Atlas. Check your network connectivity.');
+    } else if (error.message.includes('Authentication failed')) {
+      console.error('\n⚠️ AUTHENTICATION ERROR: Username or password is incorrect in your MONGO_URI.');
+    }
+    
+    throw error;
   }
 };
 
-// If the Node process ends, close the Mongoose connection
 process.on('SIGINT', async () => {
   try {
-    await mongoose.connection.close();
-    console.log('MongoDB connection closed through app termination');
+    if (mongoose.connection) {
+      await mongoose.connection.close();
+      console.log('Mongoose connection closed through app termination');
+    }
     process.exit(0);
   } catch (err) {
     console.error('Error closing MongoDB connection:', err);
