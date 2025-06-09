@@ -22,11 +22,16 @@ app.use(cors({
   origin: ['http://localhost:5173', 'https://hirenest-a-job-board-with-ai-recomm.vercel.app/'],
   credentials: true
 }));
+app.options('*', cors());
+
 
 // Middleware
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.static('static'));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Connect to database and start server only after successful connection
 const startServer = async () => {
