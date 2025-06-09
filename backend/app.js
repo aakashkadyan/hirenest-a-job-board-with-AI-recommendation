@@ -19,7 +19,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://hirenest-a-job-board-with-ai-recomm.vercel.app'],
+  origin: ['https://hirenest-a-job-board-with-ai-recomm.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
