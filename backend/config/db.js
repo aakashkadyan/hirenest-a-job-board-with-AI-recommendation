@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 require('dotenv').config();
 
-console.log("Connecting to MongoDB.....", process.env.MONGO_URI);
-
 // Handle initial connection errors better
 mongoose.connection.on('error', (err) => {
   console.error('MongoDB connection error:', err);
