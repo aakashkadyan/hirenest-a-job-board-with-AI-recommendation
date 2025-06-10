@@ -18,13 +18,18 @@ dotenv.config();
 // Initialize app
 const app = express();
 
-app.use(cors({
-  origin: ['https://hirenest-frontend.vercel.app'],
+const corsOptions = {
+  origin: 'https://hirenest-frontend.vercel.app',
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   allowedHeaders: ['Content-Type', 'Authorization']
-}));
-app.options('*', cors());
+};
+
+// Apply CORS globally
+app.use(cors(corsOptions));
+
+//Respond to preflight requests
+app.options('*', cors(corsOptions));
 
 
 // Middleware
