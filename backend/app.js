@@ -45,7 +45,13 @@ const startServer = async () => {
   try {
     // Connect to MongoDB
     await connectDB();
-    
+
+
+    app.use((req, res, next) => {
+
+      console.log(`[${req.method}] ${req.url}`);
+        next();
+      });
     app.use('/api/jobs', jobRoute);
     app.use('/api/applications', applicationRoute);
     app.use('/api/employerprofile', employerprofileRoute);
