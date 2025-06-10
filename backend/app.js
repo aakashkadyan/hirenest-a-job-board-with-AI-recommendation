@@ -60,8 +60,8 @@ const startServer = async () => {
     app.use('/api/send-email', emailNotification);
     app.use('/api/email', emailNotification);
     app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-    app.use(signUpRouter);
-    app.use(loginRouter);
+    app.use('/api',signUpRouter);
+    app.use('/api',loginRouter);
 
     
     // Error handling middleware
