@@ -4,7 +4,7 @@ require('dotenv').config();
 // Handle initial connection errors better
 mongoose.connection.on('error', (err) => {
   console.error('MongoDB connection error:', err);
-  // Don't exit process here, let the main connection handler decide
+  
 });
 
 mongoose.connection.once('open', () => {

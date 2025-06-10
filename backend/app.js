@@ -19,9 +19,9 @@ dotenv.config();
 const app = express();
 
 const corsOptions = {
-  origin: 'https://hirenest-frontend.vercel.app',
+  origin: 'https://hirenest-app-frontend.vercel.app',
   credentials: true,
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  methods: ["GET","POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
@@ -29,7 +29,10 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 //Respond to preflight requests
-app.options('*', cors(corsOptions));
+app.options('*', (req, res) => {
+  res.sendStatus(200);
+});
+
 
 
 // Middleware
