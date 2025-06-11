@@ -66,7 +66,7 @@ const startServer = async () => {
       res.status(500).send("Something broke!");
     });
 
-    // ✅ 404 handler with CORS headers
+    // 404 handler with CORS headers
     app.use((req, res) => {
       console.log("404 - Not Found:", req.url);
       res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
@@ -100,5 +100,5 @@ const startServer = async () => {
   }
 };
 
-// ✅ Start the server
+
 startServer();
