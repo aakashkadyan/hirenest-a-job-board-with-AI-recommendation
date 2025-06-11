@@ -13,48 +13,49 @@ const employerprofileRoute = require("./routes/employerprofileRoute");
 const recommendationRoute = require("./routes/recommendationRoute");
 const JobSeekerRoute = require("./routes/jobSeekerRoute")
 const emailNotification = require("./routes/emailNotification");
+
 dotenv.config();
 
 // Initialize app
 const app = express();
 
+// CORS configuration - CRITICAL: This must be first
 const corsOptions = {
-  origin: 'https://hirenest-app-frontend.vercel.app',
+  origin: ['https://hirenest-app-frontend.vercel.app', 'http://localhost:5173'], // Added localhost for development
   credentials: true,
-  methods: ["GET","POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200 // For legacy browser support
 };
 
-// Apply CORS globally
+// Apply CORS first - before any other middleware
 app.use(cors(corsOptions));
 
-//Respond to preflight requests
-app.options('*', (req, res) => {
-  res.sendStatus(200);
+// Explicit preflight handler - CRITICAL
+app.options('*', cors(corsOptions));
+
+// Request logging middleware - early in the chain
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Origin: ${req.headers.origin}`);
+  next();
 });
 
+// Body parsing middleware - use only one JSON parser
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-
-// Middleware
-
-app.use(bodyParser.json());
+// Static file serving
 app.use(express.static('static'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Connect to database and start server only after successful connection
+// Connect to database and start server
 const startServer = async () => {
   try {
     // Connect to MongoDB
     await connectDB();
+    console.log('Database connected successfully');
 
-
-    app.use((req, res, next) => {
-
-      console.log(`[${req.method}] ${req.url}`);
-        next();
-      });
+    // Routes - Define after DB connection but before error handlers
     app.use('/api/jobs', jobRoute);
     app.use('/api/applications', applicationRoute);
     app.use('/api/employerprofile', employerprofileRoute);
@@ -62,33 +63,40 @@ const startServer = async () => {
     app.use('/api/jobseekers', JobSeekerRoute);
     app.use('/api/send-email', emailNotification);
     app.use('/api/email', emailNotification);
-    app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-    app.use('/api',signUpRouter);
-    app.use('/api',loginRouter);
+    app.use('/api', signUpRouter);
+    app.use('/api', loginRouter);
 
-    
-    // Error handling middleware
-    app.use((err, req, res, next) => {
-      console.error('Error:', err.stack);
-      res.status(500).send('Something broke!');
+    // Health check endpoint
+    app.get('/health', (req, res) => {
+      res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
     });
 
-    // Handle 404
+    // 404 handler - must be after all routes
     app.use((req, res) => {
-      console.log('404 - Not Found:', req.url);
-      res.status(404).send('Page not found');
+      console.log('404 - Not Found:', req.method, req.url);
+      res.status(404).json({ error: 'Endpoint not found' });
+    });
+
+    // Error handling middleware - must be last
+    app.use((err, req, res, next) => {
+      console.error('Server Error:', err.stack);
+      res.status(500).json({ error: 'Internal server error' });
     });
 
     // Start server
     const PORT = process.env.PORT || 5002;
     const server = app.listen(PORT, () => {
-      console.log(`Server running on port - ${process.env.BASE_URL}`);
-    }).on('error', (err) => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Base URL: ${process.env.BASE_URL || `http://localhost:${PORT}`}`);
+    });
+
+    // Handle server errors
+    server.on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
-        console.error(`Port ${PORT} is already in use. Attempting to kill the process...`);
-        server.listen(PORT);
+        console.error(`Port ${PORT} is already in use`);
+        process.exit(1);
       } else {
-        console.error('Error starting server:', err);
+        console.error('Server error:', err);
       }
     });
 
@@ -100,4 +108,4 @@ const startServer = async () => {
 
 // Start the server
 startServer();
-// Added timestamp: Tue Jun 10 10:40:52 AM IST 2025
+module.exports = app;
