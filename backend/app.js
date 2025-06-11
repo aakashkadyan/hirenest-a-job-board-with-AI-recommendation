@@ -27,7 +27,8 @@ app.use((req, res, next) => {
   
   const allowedOrigins = [
     'https://hirenest-app-frontend.vercel.app',
-    'http://localhost:5173'
+    'http://localhost:5173',
+    
   ];
 
   console.log('Request Origin:', origin);
@@ -35,9 +36,7 @@ app.use((req, res, next) => {
   console.log('Request Path:', req.path);
 
   // Set CORS headers for all requests
-  if (origin && allowedOrigins.some(allowedOrigin => 
-    origin === allowedOrigin || origin.endsWith('.vercel.app')
-  )) {
+  if (origin && (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app'))) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
   
