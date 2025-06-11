@@ -21,12 +21,24 @@ dotenv.config();
 const app = express();
 
 // ✅ CORS Configuration
+// CORS Config
 const corsOptions = {
-  origin: "https://hirenest-app-frontend.vercel.app",
+  origin: 'https://hirenest-app-frontend.vercel.app',
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
+
+app.use(cors(corsOptions));
+
+// Handle preflight
+app.options('*', (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "https://hirenest-app-frontend.vercel.app");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.sendStatus(200);
+});
 
 // ✅ Apply CORS globally
 app.use(cors(corsOptions));
@@ -58,7 +70,7 @@ const startServer = async () => {
     app.use("/api", signUpRouter);
     app.use("/api", loginRouter);
 
-    // ✅ Error handler with CORS headers
+    // Error handler with CORS headers
     app.use((err, req, res, next) => {
       console.error("Error:", err.stack);
       res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
@@ -66,7 +78,7 @@ const startServer = async () => {
       res.status(500).send("Something broke!");
     });
 
-    // ✅ 404 handler with CORS headers
+    // 404 handler with CORS headers
     app.use((req, res) => {
       console.log("404 - Not Found:", req.url);
       res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
