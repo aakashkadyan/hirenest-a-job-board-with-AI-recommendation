@@ -19,20 +19,39 @@ dotenv.config();
 // Initialize app
 const app = express();
 
-// CORS configuration - CRITICAL: This must be first
-const corsOptions = {
-  origin: ['https://hirenest-app-frontend.vercel.app', 'http://localhost:5173'], // Added localhost for development
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  optionsSuccessStatus: 200 // For legacy browser support
-};
+// Remove the cors() middleware and replace with this:
 
-// Apply CORS first - before any other middleware
-app.use(cors(corsOptions));
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'https://hirenest-app-frontend.vercel.app',
+    'http://localhost:3000'
+  ];
 
-// Explicit preflight handler - CRITICAL
-app.options('*', cors(corsOptions));
+  console.log('Request Origin:', origin);
+  console.log('Request Method:', req.method);
+  console.log('Request Path:', req.path);
+
+  // Set CORS headers for all requests
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  // Handle preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS preflight request');
+    res.status(200).end();
+    return;
+  }
+
+  next();
+});
+
+
 
 // Request logging middleware - early in the chain
 app.use((req, res, next) => {
