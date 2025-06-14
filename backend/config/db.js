@@ -15,9 +15,9 @@ const connectDB = async () => {
   try {
     // Use mongoose for the main connection with more robust options
     const conn = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 10000, // Increased timeout for server selection
-      socketTimeoutMS: 45000,          // Increased socket timeout
-      connectTimeoutMS: 30000,         // Connection timeout
+      serverSelectionTimeoutMS: 60000, // Increased timeout for server selection (60 seconds)
+      socketTimeoutMS: 120000,         // Increased socket timeout (2 minutes)
+      connectTimeoutMS: 60000,         // Connection timeout (60 seconds)
       family: 4,                       // Force IPv4
       maxPoolSize: 10,                 // Connection pool size
       minPoolSize: 5,                  // Minimum connections maintained
