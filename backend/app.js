@@ -21,26 +21,21 @@ dotenv.config();
 const app = express();
 
 // ✅ CORS Configuration
-// CORS Config
 const corsOptions = {
-  origin: 'https://hirenest-app-frontend.vercel.app',
+  origin: process.env.FRONTEND_URL || "https://hirenest-app-frontend.vercel.app",
   credentials: true,
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
 
-// Handle preflight
-app.options('*', (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "https://hirenest-app-frontend.vercel.app");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.sendStatus(200);
-});
+// Handle preflight requests
+app.options("*", cors(corsOptions));
 
 app.get("/", (req, res) => {
+  // Add a log here to easily test if logging is working
+  console.log("Root endpoint hit successfully.");
   res.send(`
     <html>
     <head>
@@ -54,16 +49,11 @@ app.get("/", (req, res) => {
     <body>
       <h1>Welcome to HireNest API</h1>
       <p>API is running successfully!</p>
-      <p>Visit our <a href="https://hirenest-app-frontend.vercel.app">frontend application</a>.</p>
+      <p>Visit our <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}">frontend application</a>.</p>
     </body>
     </html> 
   `);
 });
-// Apply CORS globally
-app.use(cors(corsOptions));
-
-// Handle preflight requests with CORS headers
-app.options("*", cors(corsOptions));
 
 // Middleware
 app.use(bodyParser.json());
@@ -72,64 +62,70 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("static"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Connect to database and start server
-const startServer = async () => {
-  try {
-    await connectDB();
-    console.log("Database connected successfully");
+// ✅ Register routes immediately (not inside async function)
+app.use("/api/jobs", jobRoute);
+app.use("/api/applications", applicationRoute);
+app.use("/api/employerprofile", employerprofileRoute);
+app.use("/api/recommendation", recommendationRoute);
+app.use("/api/jobseekers", JobSeekerRoute);
+app.use("/api/send-email", emailNotification);
+app.use("/api/email", emailNotification);
+app.use("/api", signUpRouter);
+app.use("/api", loginRouter);
 
-    // Routes
-    app.use("/api/jobs", jobRoute);
-    app.use("/api/applications", applicationRoute);
-    app.use("/api/employerprofile", employerprofileRoute);
-    app.use("/api/recommendation", recommendationRoute);
-    app.use("/api/jobseekers", JobSeekerRoute);
-    app.use("/api/send-email", emailNotification);
-    app.use("/api/email", emailNotification);
-    app.use("/api", signUpRouter);
-    app.use("/api", loginRouter);
+// Error handler
+app.use((err, req, res, next) => {
+  console.error("Error:", err.stack);
+  res.status(500).send("Something broke!");
+});
 
-    // Error handler with CORS headers
-    app.use((err, req, res, next) => {
-      console.error("Error:", err.stack);
-      res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-      res.header("Access-Control-Allow-Credentials", "true");
-      res.status(500).send("Something broke!");
-    });
+// 404 handler
+app.use((req, res) => {
+  console.log("404 - Not Found:", req.url);
+  res.status(404).send("Page not found");
+});
 
-    // 404 handler with CORS headers
-    app.use((req, res) => {
-      console.log("404 - Not Found:", req.url);
-      res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-      res.header("Access-Control-Allow-Credentials", "true");
-      res.status(404).send("Page not found");
-    });
+// ✅ Handle database connection based on environment
+if (process.env.VERCEL) {
+  // For Vercel: Connect immediately, don't wait (Mongoose buffers operations)
+  connectDB().catch(err => {
+    console.error("Database connection failed:", err);
+  });
+} else {
+  // For local development: Start server and connect to database
+  const startLocalServer = async () => {
+    try {
+      // Connect to database first in local environment
+      await connectDB();
+      console.log("Database connected successfully");
 
-    // Start server
-    const PORT = process.env.PORT || 5002;
-    const server = app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log(`Base URL: ${process.env.BASE_URL || `http://localhost:${PORT}`}`);
-    });
+      const PORT = process.env.PORT || 5002;
+      const server = app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+        console.log(`Base URL: ${process.env.BASE_URL || `http://localhost:${PORT}`}`);
+      });
 
-    // Handle server errors
-    server.on("error", (err) => {
-      if (err.code === "EADDRINUSE") {
-        console.error(`Port ${PORT} is already in use. Trying another port...`);
-        const newPort = PORT + 1;
-        app.listen(newPort, () => {
-          console.log(`Server running on port ${newPort} (fallback)`);
-        });
-      } else {
-        console.error("Server error:", err);
-      }
-    });
+      // Handle server errors
+      server.on("error", (err) => {
+        if (err.code === "EADDRINUSE") {
+          console.error(`Port ${PORT} is already in use. Trying another port...`);
+          const newPort = PORT + 1;
+          app.listen(newPort, () => {
+            console.log(`Server running on port ${newPort} (fallback)`);
+          });
+        } else {
+          console.error("Server error:", err);
+        }
+      });
 
-  } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
-  }
-};
+    } catch (error) {
+      console.error("Failed to start server:", error);
+      process.exit(1);
+    }
+  };
 
-// ✅ Start the server
-startServer();
+  startLocalServer();
+}
+
+// Export the app for Vercel's serverless environment
+module.exports = app;
