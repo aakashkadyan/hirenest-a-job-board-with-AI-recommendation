@@ -40,10 +40,29 @@ app.options('*', (req, res) => {
   res.sendStatus(200);
 });
 
-// ✅ Apply CORS globally
+app.get("/", (req, res) => {
+  res.send(`
+    <html>
+    <head>
+      <title>HireNest API</title>
+      <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        h1 { color: #333; }
+        p { font-size: 18px; }
+      </style>
+    </head>
+    <body>
+      <h1>Welcome to HireNest API</h1>
+      <p>API is running successfully!</p>
+      <p>Visit our <a href="https://hirenest-app-frontend.vercel.app">frontend application</a>.</p>
+    </body>
+    </html> 
+  `);
+});
+// Apply CORS globally
 app.use(cors(corsOptions));
 
-// ✅ Handle preflight requests with CORS headers
+// Handle preflight requests with CORS headers
 app.options("*", cors(corsOptions));
 
 // Middleware
@@ -53,7 +72,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("static"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ✅ Connect to database and start server
+// Connect to database and start server
 const startServer = async () => {
   try {
     await connectDB();
