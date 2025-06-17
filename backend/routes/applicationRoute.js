@@ -1,32 +1,65 @@
 const express = require('express');
 const applicationRoute = express.Router();
+const multer = require('multer');
 const Application = require('../models/Application');
 const Job = require('../models/Job'); // Add this import
+const { uploadToGoogleDrive, deleteFromGoogleDrive } = require('../utils/googleDrive');
 
-// POST: Submit a job application
-applicationRoute.post('/', async (req, res) => {
+// Configure multer for memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept only PDF files
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'));
+    }
+  },
+});
+
+// POST: Submit a job application with resume upload
+applicationRoute.post('/', upload.single('resume'), async (req, res) => {
   try {
-    const { job, applicant, resume, coverLetter } = req.body;
+    const { job, applicant, coverLetter } = req.body;
+    const resumeFile = req.file;
 
     // Validate required fields
-    if (!job || !applicant || !resume || !coverLetter) {
+    if (!job || !applicant || !coverLetter || !resumeFile) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
-    // Create a new application
+    // Upload resume to Google Drive
+    const driveResponse = await uploadToGoogleDrive(resumeFile);
+
+    // Create a new application with Google Drive file info
     const newApplication = new Application({
       job,
       applicant,
-      resume,
+      resume: {
+        fileId: driveResponse.fileId,
+        webViewLink: driveResponse.webViewLink,
+        fileName: resumeFile.originalname
+      },
       coverLetter,
     });
 
     // Save to MongoDB
     await newApplication.save();
 
-    res.status(201).json({ message: 'Application submitted successfully', application: newApplication });
+    res.status(201).json({ 
+      message: 'Application submitted successfully', 
+      application: newApplication 
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Server error', details: error.message });
+    console.error('Error submitting application:', error);
+    res.status(500).json({ 
+      error: 'Server error', 
+      details: error.message 
+    });
   }
 });
 
@@ -114,14 +147,23 @@ applicationRoute.delete('/:id', async (req, res) => {
   try {
     const applicationId = req.params.id;
 
-    const deleted = await Application.findByIdAndDelete(applicationId);
-
-    if (!deleted) {
+    // Find the application first to get the file ID
+    const application = await Application.findById(applicationId);
+    if (!application) {
       return res.status(404).json({ message: 'Application not found' });
     }
 
+    // Delete the file from Google Drive if it exists
+    if (application.resume && application.resume.fileId) {
+      await deleteFromGoogleDrive(application.resume.fileId);
+    }
+
+    // Delete the application from MongoDB
+    await Application.findByIdAndDelete(applicationId);
+
     res.status(200).json({ message: 'Application deleted successfully' });
   } catch (error) {
+    console.error('Error deleting application:', error);
     res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
@@ -214,4 +256,5 @@ applicationRoute.get('/suggestions/locations', async (req, res) => {
   }
 });
 
+module.exports = applicationRoute;
 module.exports = applicationRoute;

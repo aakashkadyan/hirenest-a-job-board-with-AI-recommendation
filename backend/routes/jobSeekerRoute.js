@@ -3,19 +3,10 @@ const JobSeekerRoute = express.Router();
 const JobSeeker = require('../models/Jobseeker');
 const multer = require('multer');
 const path = require('path');
+const { uploadToGoogleDrive } = require('../utils/googleDrive');
 
-// 1. Configure multer storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Make sure 'uploads' folder exists
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname)); // e.g., 16894738392-resume.pdf
-  }
-});
-
-const upload = multer({ storage: storage });
+// Use multer memory storage for Google Drive uploads
+const upload = multer({ storage: multer.memoryStorage() });
 
 // 2. POST - Create Job Seeker Profile
 JobSeekerRoute.post('/', upload.single('resume'), async (req, res) => {
@@ -29,12 +20,27 @@ JobSeekerRoute.post('/', upload.single('resume'), async (req, res) => {
       jobPreferences
     } = req.body;
 
-    const parsedSkills = JSON.parse(skills);
-    const parsedExperience = JSON.parse(experience);
-    const parsedEducation = JSON.parse(education);
-    const parsedJobPreferences = JSON.parse(jobPreferences);
+    // Parse JSON fields safely
+    let parsedSkills, parsedExperience, parsedEducation, parsedJobPreferences;
+    try {
+      parsedSkills = JSON.parse(skills);
+      parsedExperience = JSON.parse(experience);
+      parsedEducation = JSON.parse(education);
+      parsedJobPreferences = JSON.parse(jobPreferences);
+    } catch (err) {
+      return res.status(400).json({ message: 'Invalid JSON in one of the fields.' });
+    }
 
-    const resume = req.file ? req.file.filename : null;
+    // Upload resume to Google Drive
+    let resumeLink = null;
+    if (req.file) {
+      try {
+        const driveResult = await uploadToGoogleDrive(req.file);
+        resumeLink = driveResult.webViewLink;
+      } catch (err) {
+        return res.status(500).json({ message: 'Failed to upload resume to Google Drive', error: err.message });
+      }
+    }
 
     const existingProfile = await JobSeeker.findOne({ user });
     if (existingProfile) {
@@ -47,11 +53,9 @@ JobSeekerRoute.post('/', upload.single('resume'), async (req, res) => {
       skills: parsedSkills,
       experience: parsedExperience,
       education: parsedEducation,
-      resume,
+      resume: resumeLink,
       jobPreferences: parsedJobPreferences
     });
-
-    console.log('New Job Seeker Profile:', newProfile);
 
     await newProfile.save();
 
@@ -92,13 +96,19 @@ JobSeekerRoute.put('/:userId', upload.single('resume'), async (req, res) => {
           updateData[field] = JSON.parse(updateData[field]);
         } catch (err) {
           console.error(`Failed to parse ${field}:`, err.message);
+          return res.status(400).json({ message: `Invalid JSON in field: ${field}` });
         }
       }
     });
 
-    // Handle resume file upload
+    // Handle resume file upload to Google Drive
     if (req.file) {
-      updateData.resume = req.file.filename;
+      try {
+        const driveResult = await uploadToGoogleDrive(req.file);
+        updateData.resume = driveResult.webViewLink;
+      } catch (err) {
+        return res.status(500).json({ message: 'Failed to upload resume to Google Drive', error: err.message });
+      }
     }
 
     const updatedProfile = await JobSeeker.findOneAndUpdate(
