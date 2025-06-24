@@ -37,8 +37,11 @@ JobSeekerRoute.post('/', upload.single('resume'), async (req, res) => {
       try {
         const driveResult = await uploadToGoogleDrive(req.file);
         resumeLink = driveResult.webViewLink;
+        console.log('Resume uploaded successfully to Google Drive');
       } catch (err) {
-        return res.status(500).json({ message: 'Failed to upload resume to Google Drive', error: err.message });
+        console.error('Failed to upload resume to Google Drive:', err.message);
+        // Don't fail the entire request, just log the error and continue without resume
+        console.warn('Continuing profile creation without resume upload due to Google Drive error');
       }
     }
 
@@ -53,7 +56,7 @@ JobSeekerRoute.post('/', upload.single('resume'), async (req, res) => {
       skills: parsedSkills,
       experience: parsedExperience,
       education: parsedEducation,
-      resume: resumeLink,
+      resume: resumeLink || undefined,
       jobPreferences: parsedJobPreferences
     });
 
@@ -106,8 +109,13 @@ JobSeekerRoute.put('/:userId', upload.single('resume'), async (req, res) => {
       try {
         const driveResult = await uploadToGoogleDrive(req.file);
         updateData.resume = driveResult.webViewLink;
+        console.log('Resume updated successfully on Google Drive');
       } catch (err) {
-        return res.status(500).json({ message: 'Failed to upload resume to Google Drive', error: err.message });
+        console.error('Failed to upload resume to Google Drive:', err.message);
+        // Don't fail the entire update, just log the error and continue without updating resume
+        console.warn('Continuing profile update without resume upload due to Google Drive error');
+        // Remove resume from updateData to avoid overwriting existing resume with null
+        delete updateData.resume;
       }
     }
 

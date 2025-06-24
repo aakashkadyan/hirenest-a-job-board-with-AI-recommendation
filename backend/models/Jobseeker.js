@@ -13,7 +13,7 @@ const jobSeekerSchema = new mongoose.Schema({
   },
   skills: [{
     type: String,
-    required: true
+    required: false // Make individual skills optional
   }],
   experience: [{
     company: String,
@@ -31,7 +31,7 @@ const jobSeekerSchema = new mongoose.Schema({
   }, { _id: false }],
   resume: {
     type: String, // Store file path or cloud URL for resume
-    required: true
+    required: false // Make resume optional
   },
   jobPreferences: {
     preferredJobType: {

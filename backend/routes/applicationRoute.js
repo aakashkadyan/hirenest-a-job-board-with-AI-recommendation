@@ -2,7 +2,7 @@ const express = require('express');
 const applicationRoute = express.Router();
 const multer = require('multer');
 const Application = require('../models/Application');
-const Job = require('../models/Job'); // Add this import
+const Job = require('../models/Job');
 const { uploadToGoogleDrive, deleteFromGoogleDrive } = require('../utils/googleDrive');
 
 // Configure multer for memory storage
@@ -27,23 +27,29 @@ applicationRoute.post('/', upload.single('resume'), async (req, res) => {
     const { job, applicant, coverLetter } = req.body;
     const resumeFile = req.file;
 
-    // Validate required fields
-    if (!job || !applicant || !coverLetter || !resumeFile) {
-      return res.status(400).json({ error: 'All fields are required' });
+    // Only require job and applicant
+    if (!job || !applicant) {
+      return res.status(400).json({ error: 'Job and applicant are required' });
     }
 
-    // Upload resume to Google Drive
-    const driveResponse = await uploadToGoogleDrive(resumeFile);
+    // Upload resume to Google Drive if provided
+    let driveResponse = null;
+    if (resumeFile) {
+      console.log('📄 Processing resume upload...');
+      driveResponse = await uploadToGoogleDrive(resumeFile);
+    }
 
-    // Create a new application with Google Drive file info
+    // Create a new application with Google Drive file info if available
     const newApplication = new Application({
       job,
       applicant,
-      resume: {
-        fileId: driveResponse.fileId,
-        webViewLink: driveResponse.webViewLink,
-        fileName: resumeFile.originalname
-      },
+      resume: driveResponse
+        ? {
+            fileId: driveResponse.fileId,
+            webViewLink: driveResponse.webViewLink,
+            fileName: resumeFile.originalname
+          }
+        : undefined,
       coverLetter,
     });
 
@@ -56,6 +62,60 @@ applicationRoute.post('/', upload.single('resume'), async (req, res) => {
     });
   } catch (error) {
     console.error('Error submitting application:', error);
+    res.status(500).json({ 
+      error: 'Server error', 
+      details: error.message 
+    });
+  }
+});
+
+// POST: Quick apply for jobs without full profile
+applicationRoute.post('/quick-apply', upload.single('resume'), async (req, res) => {
+  try {
+    const { job, applicantName, applicantEmail, coverLetter } = req.body;
+    const resumeFile = req.file;
+
+    // Validate required fields
+    if (!job || !applicantName || !applicantEmail) {
+      return res.status(400).json({ error: 'Job, applicant name, and email are required' });
+    }
+
+    if (!resumeFile) {
+      return res.status(400).json({ error: 'Resume file is required for quick apply' });
+    }
+
+    console.log('📄 Processing quick apply resume upload...');
+    
+    // Upload resume to Google Drive (or local storage)
+    const driveResponse = await uploadToGoogleDrive(resumeFile);
+
+    // Create a simplified application record
+    const newApplication = new Application({
+      job,
+      applicant: null, // No full profile
+      applicantInfo: {
+        name: applicantName,
+        email: applicantEmail
+      },
+      resume: {
+        fileId: driveResponse.fileId,
+        webViewLink: driveResponse.webViewLink,
+        fileName: resumeFile.originalname
+      },
+      coverLetter: coverLetter || `Quick application for the position.`,
+      applicationMethod: 'quick-apply'
+    });
+
+    // Save to MongoDB
+    await newApplication.save();
+
+    console.log('✅ Quick application submitted successfully');
+    res.status(201).json({ 
+      message: 'Quick application submitted successfully', 
+      application: newApplication 
+    });
+  } catch (error) {
+    console.error('Error submitting quick application:', error);
     res.status(500).json({ 
       error: 'Server error', 
       details: error.message 
@@ -97,18 +157,39 @@ applicationRoute.get('/:id', async (req, res) => {
       const applications = await Application.find({ job: { $in: jobIds } })
         .populate({
           path: 'applicant',
-          select: 'bio skills experience education resume user', // From JobSeeker
+          select: 'bio skills experience education resume user',
           populate: {
             path: 'user',
-            select: 'name email' // From User model
+            select: 'name email'
           }
         })
         .populate({
           path: 'job',
-          select: 'title description location company' // Add fields you want
+          select: 'title description location company'
         });
   
-      res.status(200).json({ applications });
+      // Transform applications to include applicant info from both sources
+      const transformedApplications = applications.map(app => {
+        const appObj = app.toObject();
+        
+        // If it's a quick apply, use applicantInfo instead of populated applicant
+        if (app.applicationMethod === 'quick-apply' && app.applicantInfo) {
+          appObj.applicant = {
+            user: {
+              name: app.applicantInfo.name,
+              email: app.applicantInfo.email
+            },
+            bio: 'Quick application - no full profile',
+            skills: [],
+            experience: [],
+            education: []
+          };
+        }
+        
+        return appObj;
+      });
+  
+      res.status(200).json({ applications: transformedApplications });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Server error', details: error.message });
@@ -256,5 +337,4 @@ applicationRoute.get('/suggestions/locations', async (req, res) => {
   }
 });
 
-module.exports = applicationRoute;
 module.exports = applicationRoute;

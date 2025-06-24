@@ -22,7 +22,7 @@ const app = express();
 
 // ✅ CORS Configuration
 const corsOptions = {
-  origin: "https://hirenest-app-frontend.vercel.app" || process.env.FRONTEND_URL,
+  origin:  "https://hirenest-app-frontend.vercel.app" || process.env.FRONTEND_URL , 
   credentials: true,
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
   allowedHeaders: ["Content-Type", "Authorization"],

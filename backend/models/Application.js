@@ -9,7 +9,21 @@ const applicationSchema = new mongoose.Schema({
   applicant: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'JobSeeker',
-    required: true
+    required: false
+  },
+  applicantInfo: {
+    name: {
+      type: String,
+      required: function() {
+        return !this.applicant;
+      }
+    },
+    email: {
+      type: String,
+      required: function() {
+        return !this.applicant;
+      }
+    }
   },
   resume: {
     fileId: String,
@@ -18,12 +32,16 @@ const applicationSchema = new mongoose.Schema({
   },
   coverLetter: {
     type: String,
-    required: true
   },
   status: {
     type: String,
     enum: ['pending', 'reviewed', 'shortlisted', 'rejected'],
     default: 'pending'
+  },
+  applicationMethod: {
+    type: String,
+    enum: ['full-profile', 'quick-apply'],
+    default: 'full-profile'
   },
   appliedAt: {
     type: Date,
